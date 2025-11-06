@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPC Therapy - Ultimate Combined Edition</title>
+    <link rel="icon" href="data:,">
+    <script src="https://cdn.jsdelivr.net/npm/dexie@latest/dist/dexie.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            text-align: center;
+            image-rendering: pixelated;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* CRT Filter Overlay */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.1) 2px,
+                rgba(0, 255, 0, 0.1) 4px
+            );
+            z-index: 9999;
+            opacity: 0.3;
+            animation: scanlines 0.1s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        #gameContainer {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #000;
+            border: 4px solid #6ff;
+            box-shadow: 0 0 30px rgba(102, 255, 255, 0.5);
+            position: relative;
+            min-height: 650px;
+            transition: background 0.5s ease;
+            overflow: hidden;
+        }
+
+        #startScreen, #habitatScreen, #therapyOffice, #sessionComplete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        #habitatScreen, #therapyOffice, #sessionComplete {
+            background: linear-gradient(135deg, #101820 0%, #1a1a2e 100%);
+        }
+
+        .screen-title {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #6ff;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        /* Habitat Screen Styles */
+        .habitat-image {
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            background-size: cover;
+            background-position: center;
+            border: 4px solid #6ff;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .npc-sprite {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            filter: drop-shadow(0 0 10px rgba(102, 255, 255, 0.8));
+        }
+
+        .habitat-description {
+            font-size: 10px;
+            max-width: 600px;
+            margin: 20px;
+            line-height: 1.5;
+            color: #ccc;
+        }
+
+        /* NPC Creation */
+        #npcCreation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        /* Glitch Screen */
+        #glitchScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            z-index: 1002;
+            animation: glitch 2s ease-in-out;
+        }
+
+        @keyframes glitch {
+            0% { filter: none; }
+            25% { filter: hue-rotate(90deg) contrast(200%); }
+            50% { filter: hue-rotate(180deg) invert(100%); }
+            75% { filter: hue-rotate(270deg) contrast(200%); }
+            100% { filter: none; }
+        }
+
+        .form-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: #6ff;
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            background: #222;
+            border: 1px solid #6ff;
+            color: #fff;
+            font-family: inherit;
+            font-size: 10px;
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .start-btn, .create-btn, .transition-btn, .control-btn, .finish-btn, .credits-btn {
+            background: #6ff;
+            border: none;
+            padding: 12px 24px;
+            color: #000;
+            font-family: 'Press Start 2P';
+            font-size: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover, .create-btn:hover, .transition-btn:hover, .control-btn:hover, .finish-btn:hover {
+            background: #8ff;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(102, 255, 255, 0.5);
+        }
+
+        /* Main Game Area with Side Panel */
+        #mainGameArea {
+            display: flex;
+            height: 100%;
+        }
+
+        #leftPanel {
+            width: 60%;
+            position: relative;
+        }
+
+        #rightPanel {
+            width: 40%;
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 2px solid #6ff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Therapy Office */
+        .therapy-office-bg {
+            width: 100%;
+            height: 100%;
+            background-image: url('imgs/therapy_office.png');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .npc-on-couch {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            transition: all 0.5s ease-in-out;
+            filter: drop-shadow(0 0 15px rgba(102, 255, 255, 0.6));
+        }
+
+        /* NPC State Animations */
+        .npc-anxious {
+            animation: anxious-shake 2s infinite;
+        }
+
+        .npc-crying {
+            animation: crying-pulse 1.5s infinite;
+        }
+
+        .npc-glitched {
+            animation: glitch-shake 0.3s infinite;
+        }
+
+        .npc-calm {
+            animation: gentle-breathe 3s infinite;
+        }
+
+        @keyframes anxious-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        @keyframes crying-pulse {
+            0%, 100% { opacity: 1; filter: brightness(1); }
+            50% { opacity: 0.7; filter: brightness(0.8) drop-shadow(0 0 10px #6ff); }
+        }
+
+        @keyframes glitch-shake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-2px, 2px) rotate(-1deg); }
+            40% { transform: translate(-2px, -2px) rotate(1deg); }
+            60% { transform: translate(2px, 2px) rotate(0deg); }
+            80% { transform: translate(2px, -2px) rotate(-1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        @keyframes gentle-breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Emotion Meter */
+        .emotion-meter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #6ff;
+            padding: 10px;
+            font-size: 8px;
+            z-index: 10;
+        }
+
+        .emotion-bar {
+            width: 100px;
+            height: 6px;
+            background: #333;
+            margin: 5px 0;
+            border: 1px solid #666;
+        }
+
+        .emotion-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .hope { background: linear-gradient(to right, #ff6b6b, #feca57); }
+        .rage { background: linear-gradient(to right, #6b47dc, #ee5a52); }
+        .acceptance { background: linear-gradient(to right, #4834d4, #686de0); }
+
+        /* Session Status */
+        .session-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #6ff;
+            padding: 10px;
+            font-size: 8px;
+            z-index: 10;
+        }
+
+        /* Dialogue Box */
+        .dialogue-box {
+            position: absolute;
+            bottom: 150px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #6ff;
+            padding: 15px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .npc-name {
+            color: #6ff;
+            font-size: 11px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #6ff;
+        }
+
+        /* Enhanced Questions - FIXED: Show 4 at once */
+        .questions-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .question {
+            background: rgba(102, 255, 255, 0.1);
+            border: 1px solid #6ff;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 8px;
+            position: relative;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .question:hover {
+            background: rgba(102, 255, 255, 0.2);
+            transform: scale(1.02);
+            border-color: #8ff;
+        }
+
+        .question.selected {
+            background: rgba(102, 255, 255, 0.3);
+            border-color: #8ff;
+            box-shadow: 0 0 10px rgba(102, 255, 255, 0.3);
+        }
+
+        .question-type {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 6px;
+            opacity: 0.7;
+        }
+
+        .empathetic { border-left: 3px solid #ff6b6b; }
+        .challenging { border-left: 3px solid #ee5a52; }
+        .insightful { border-left: 3px solid #feca57; }
+        .supportive { border-left: 3px solid #48cae4; }
+
+        /* NPC Response */
+        .npc-response {
+            background: rgba(102, 255, 255, 0.05);
+            border: 1px solid #6ff;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 8px;
+            border-radius: 3px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .response-speaking {
+            color: #6ff;
+            font-style: italic;
+            animation: pulse 1s infinite;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            background: #6ff;
+            border: none;
+            padding: 8px 16px;
+            color: #000;
+            font-family: 'Press Start 2P';
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #8ff;
+        }
+
+        .control-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        /* Side Panel Controls */
+        #controls {
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            gap: 8px;
+        }
+
+        .panel-btn {
+            background: #444;
+            border: 1px solid #6ff;
+            color: #6ff;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .panel-btn:hover, .panel-btn.active {
+            background: #6ff;
+            color: #000;
+        }
+
+        /* Panels */
+        .panel {
+            padding: 15px;
+            height: 250px;
+            overflow-y: auto;
+        }
+
+        .note-entry {
+            background: rgba(102, 255, 255, 0.1);
+            border: 1px solid #6ff;
+            padding: 8px;
+            margin: 5px 0;
+            font-size: 8px;
+        }
+
+        .note-entry textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: 8px;
+            resize: vertical;
+        }
+
+        #generatedImage {
+            width: 100%;
+            height: 150px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: 1px solid #6ff;
+            margin: 10px 0;
+        }
+
+        #imageAnalysis {
+            font-size: 8px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #666;
+            margin: 10px 0;
+            min-height: 60px;
+        }
+
+        /* Advanced Features */
+        .fourth-wall-break {
+            background: linear-gradient(45deg, #000, #333);
+            border: 2px solid #f66;
+            animation: glitch 0.5s infinite;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 8px;
+        }
+
+        .transference-text {
+            color: #f6f;
+            font-size: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .connected-stories {
+            color: #ff6;
+            font-size: 7px;
+            font-style: italic;
+            margin: 5px 0;
+        }
+
+        .breakthrough-log {
+            background: rgba(102, 255, 255, 0.1);
+            border: 1px solid #6ff;
+            padding: 8px;
+            margin: 5px 0;
+            font-size: 8px;
+        }
+
+        /* Session Complete */
+        .item-reward {
+            background: linear-gradient(45deg, #6ff, #8ff);
+            border: 3px solid #fff;
+            padding: 15px;
+            margin: 20px;
+            font-size: 12px;
+            color: #000;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(102, 255, 255, 0.5); }
+            to { box-shadow: 0 0 30px rgba(102, 255, 255, 0.8); }
+        }
+
+        .fade-transition {
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .fade-in {
+            opacity: 1;
+        }
+
+        /* Free Input */
+        .freeInput {
+            width: 100%;
+            padding: 8px;
+            background: #222;
+            border: 1px solid #6ff;
+            color: #fff;
+            font-family: inherit;
+            font-size: 10px;
+            margin: 5px 0;
+        }
+
+        /* Loading animation */
+        .loading {
+            color: #ff6;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .speaking {
+            animation: pulse 1s infinite;
+            color: #6ff;
+        }
+
+        .tts-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 20;
+        }
+
+        /* Music Player Styles */
+        #musicPlayer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #6ff;
+            padding: 10px;
+            z-index: 2000;
+            transition: all 0.3s ease;
+        }
+
+        #musicPlayer.minimized {
+            height: 20px;
+            width: 50px;
+            overflow: hidden;
+        }
+
+        #playerControls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #playerControls button {
+            background: #6ff;
+            border: none;
+            color: #000;
+            padding: 5px 8px;
+            cursor: pointer;
+        }
+
+        #youtubePlayer {
+            width: 200px;
+            height: 100px;
+            margin-top: 10px;
+        }
+
+        #minimizePlayer {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #6ff;
+            border: none;
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 1000px) {
+            #mainGameArea { flex-direction: column; }
+            #leftPanel, #rightPanel { width: 100%; }
+            #rightPanel { height: 300px; }
+            .questions-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Credits Modal */
+        #creditsModal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1003;
+        }
+
+        .credits-content, .connection-map-content {
+            background: #111;
+            border: 2px solid #6ff;
+            padding: 30px;
+            width: 80%;
+            max-width: 700px;
+            height: 70%;
+            overflow-y: auto;
+        }
+
+        #connectionMapModal, #rorschachModal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1004;
+        }
+    </style>
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    
+    <div id="gameContainer">
+        <!-- Start Screen -->
+        <div id="startScreen">
+            <h1 class="screen-title">NPC THERAPY</h1>
+            <h2 style="font-size: 12px; color: #6ff; margin-bottom: 30px;">Ultimate Combined Edition</h2>
+            <p style="font-size: 9px; max-width: 600px; line-height: 1.6; color: #aaa; margin-bottom: 30px;">
+                Experience the most complete therapy simulation with immersive habitat transitions, 
+                AI-powered conversations, emotional state tracking, fourth wall breaks, and deep psychological exploration.
+                Journey into NPC worlds, understand their pain, and guide them through meaningful healing.
+            </p>
+            <button class="start-btn" onclick="startGame(); playSound('click');">Begin Therapy Journey</button>
+            <button class="create-btn" onclick="showNPCCreation(); playSound('click');">Create New NPC</button>
+            <button class="credits-btn" onclick="showCredits(); playSound('click');">Credits</button>
+            <div style="margin-top: 20px;">
+                <input type="text" id="progressCodeInput" placeholder="Enter progress code" style="padding: 8px; font-size: 8px;">
+                <button class="control-btn" onclick="loadProgress(); playSound('click');">Load</button>
+            </div>
+            <p style="font-size: 8px; margin-top: 20px; color: #888;">
+                Powered by Pollinations.AI • Immersive Flow • AI Enhanced • ~60 minutes
+            </p>
+        </div>
+
+        <!-- NPC Creation Screen -->
+        <div id="npcCreation">
+            <h2 style="color: #6ff; margin-bottom: 20px;">Create Enhanced NPC</h2>
+            <form id="npcForm" style="width: 450px; max-width: 95%;">
+                <div class="form-group">
+                    <label>AI Image Prompt:</label>
+                    <input type="text" id="npcImagePrompt" required placeholder="e.g., a cheerful robot gardener made of copper">
+                </div>
+                <div class="form-group">
+                    <label>NPC Name:</label>
+                    <input type="text" id="npcName" required placeholder="Enter NPC name">
+                </div>
+                <div class="form-group">
+                    <label>Monologue (Their opening dialogue):</label>
+                    <textarea id="npcMonologue" required placeholder="What they say when therapy begins..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Habitat Description:</label>
+                    <textarea id="habitatDesc" required placeholder="Describe their world and environment..."></textarea>
+                </div>
+                <button type="button" class="create-btn" onclick="createNPC(); playSound('confirm');">Create NPC</button>
+                <button type="button" class="control-btn" onclick="randomizeNPC(); playSound('click');">Randomize</button>
+                <button type="button" class="start-btn" onclick="hideNPCCreation(); playSound('cancel');">Cancel</button>
+            </form>
+        </div>
+
+        <!-- Glitch Screen -->
+        <div id="glitchScreen">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #6ff;">
+                <h2>SYSTEM ERROR</h2>
+                <p>Fourth wall breach detected...</p>
+                <div style="color: #f66; font-size: 6px;">NPC experiencing existential crisis</div>
+            </div>
+        </div>
+
+        <!-- Habitat Screen -->
+        <div id="habitatScreen" style="display: none;">
+            <div id="habitatContent">
+                <h2 class="screen-title" id="habitatTitle"></h2>
+                <div class="habitat-image">
+                    <img id="habitatImage" src="" alt="Habitat Image" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img id="habitatSprite" src="" alt="NPC Sprite" class="npc-sprite">
+                </div>
+                <p class="habitat-description" id="habitatDescription"></p>
+                <button class="transition-btn" onclick="enterTherapyOffice(); playSound('transition');">Enter Therapy Office →</button>
+            </div>
+        </div>
+
+        <!-- Therapy Office -->
+        <div id="therapyOffice" style="display: none;">
+            <!-- Side Panel -->
+            <div id="mainGameArea" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;">
+                <div id="leftPanel">
+                    <div class="therapy-office-bg">
+                        <div class="therapy-ui-top">
+                            <div class="tts-controls">
+                                <button class="control-btn" onclick="toggleTTS()" id="ttsBtn">🔊 TTS: ON</button>
+                            </div>
+                            <div class="session-status">
+                                <div>Session <span id="sessionNumber">1</span> of <span id="totalSessions">10</span></div>
+                                <div>Questions asked: <span id="questionsAsked">0</span>/5</div>
+                                <div>Layer: <span id="dialogueLayer">Surface</span></div>
+                            </div>
+                            <div class="emotion-meter">
+                                <div>Emotional State</div>
+                                <div class="emotion-bar">
+                                    <div class="emotion-fill hope" id="hopeFill" style="width: 50%"></div>
+                                </div>
+                                <div style="font-size: 6px;">Hope: <span id="hopeValue">50</span>%</div>
+                                <div class="emotion-bar">
+                                    <div class="emotion-fill rage" id="rageFill" style="width: 50%"></div>
+                                </div>
+                                <div style="font-size: 6px;">Rage: <span id="rageValue">50</span>%</div>
+                                <div class="emotion-bar">
+                                    <div class="emotion-fill acceptance" id="acceptanceFill" style="width: 50%"></div>
+                                </div>
+                                <div style="font-size: 6px;">Acceptance: <span id="acceptanceValue">50</span>%</div>
+                            </div>
+                        </div>
+
+                        <div class="therapy-main">
+                            <img class="npc-on-couch" id="npcOnCouchSprite" alt="NPC on couch">
+                            <div class="dialogue-box">
+                                <div class="npc-name" id="npcName"></div>
+                                <div id="currentDialogue"></div>
+                                <div id="questionsContainer"></div>
+                            </div>
+                        </div>
+
+                        <div class="therapy-controls">
+                            <div class="control-panel">
+                                <button class="control-btn" id="nextQuestionBtn" onclick="askTherapyQuestion(); playSound('click');" disabled>Ask New Questions</button>
+                                <button class="control-btn" onclick="endSession(); playSound('confirm');" id="endSessionBtn" disabled>End Session</button>
+                                <button class="control-btn" onclick="skipDialogue(); playSound('click');" id="skipBtn">Continue</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="rightPanel">
+                    <div id="controls">
+                        <button class="panel-btn active" onclick="switchPanel('notebook'); playSound('switch');">📝 Notes</button>
+                        <button class="panel-btn" onclick="switchPanel('imageGen'); playSound('switch');">🎨 Generate Image</button>
+                        <button class="panel-btn" onclick="switchPanel('imageAnalysis'); playSound('switch');">🔍 Analyze Image</button>
+                        <button class="panel-btn" onclick="playSpeech(); playSound('click');">🔊 Speak</button>
+                        <button class="panel-btn" onclick="checkTransference(); playSound('click');">💕 Transference</button>
+                        <button class="panel-btn" onclick="checkFourthWall(); playSound('click');">🖥️ Fourth Wall</button>
+                        <button class="panel-btn" onclick="triggerGlitch(); playSound('glitch');">⚡ Glitch</button>
+                        <button class="panel-btn" onclick="addNote(); playSound('click');">➕ Add Note</button>
+                        <button class="panel-btn" onclick="switchPanel('freeInput'); playSound('switch');">💬 Free Input</button>
+                        <button class="panel-btn" onclick="showConnectionMap(); playSound('click');">🗺️ Connection Map</button>
+                        <button class="panel-btn" onclick="showRorschachTest(); playSound('click');">🎨 Rorschach Test</button>
+
+                    </div>
+
+                    <div id="notebook" class="panel">
+                        <h3 style="color: #6ff; font-size: 10px; margin-bottom: 10px;">Session Notes</h3>
+                        <div id="notesContainer"></div>
+                    </div>
+
+                    <div id="imageGen" class="panel" style="display: none;">
+                        <h3 style="color: #6ff; font-size: 10px; margin-bottom: 10px;">AI Image Generation</h3>
+                        <input type="text" id="imagePrompt" placeholder="Describe what NPC is thinking about..." style="width: 100%; padding: 5px; margin-bottom: 10px; font-size: 8px;">
+                        <button class="panel-btn" onclick="generateImage(); playSound('confirm');">Generate</button>
+                        <div id="generatedImage"></div>
+                    </div>
+
+                    <div id="imageAnalysis" class="panel" style="display: none;">
+                        <h3 style="color: #6ff; font-size: 10px; margin-bottom: 10px;">NPC Image Analysis</h3>
+                        <input type="url" id="analysisImageUrl" placeholder="Enter image URL..." style="width: 100%; padding: 5px; margin-bottom: 10px; font-size: 8px;">
+                        <button class="panel-btn" onclick="analyzeImage(); playSound('confirm');">Ask NPC</button>
+                        <div id="analysisResult"></div>
+                    </div>
+
+                    <div id="freeInput" class="panel" style="display: none;">
+                        <h3 style="color: #6ff; font-size: 10px; margin-bottom: 10px;">Free Response Mode</h3>
+                        <textarea class="freeInput" id="playerResponse" placeholder="Type your therapeutic response..."></textarea>
+                        <button class="panel-btn" onclick="analyzePlayerResponse(); playSound('confirm');">Send Response</button>
+                        <div id="responseAnalysis" style="margin-top: 10px; font-size: 8px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Complete -->
+        <div id="sessionComplete" style="display: none;">
+            <h2 class="screen-title">Session Complete</h2>
+            <div id="sessionSummary"></div>
+            <div id="itemReward" class="item-reward"></div>
+            <div id="progressCode" style="margin-top: 20px; font-size: 10px;"></div>
+            <button class="finish-btn" onclick="nextNPC(); playSound('transition');">Continue to Next Patient →</button>
+        </div>
+
+        <!-- Credits Modal -->
+        <div id="creditsModal">
+            <div class="credits-content">
+                <h2 style="color: #6ff;">Credits</h2>
+
+                <h3 style="color: #ff6; font-size: 10px; margin-top: 20px;">AI Services Featured</h3>
+                <div style="font-size: 8px; line-height: 1.8;">
+                    <a href="https://gemini.google.com" target="_blank">Google Gemini</a> &bull;
+                    <a href="https://chat.openai.com" target="_blank">ChatGPT</a> &bull;
+                    <a href="https://github.com/comfyanonymous/ComfyUI" target="_blank">ComfyUI</a> &bull;
+                    <a href="https://glif.app" target="_blank">Glif.app</a> &bull;
+                    <a href="https://pollinations.ai" target="_blank">Pollinations AI</a> &bull;
+                    <a href="https://agent.minimaxi.chat" target="_blank">MiniMax AI Agent</a> &bull;
+                    <a href="https://hailuoai.com" target="_blank">Hailuo AI</a> &bull;
+                    <a href="https://waytoagi.com" target="_blank">waytoAGI</a> &bull;
+                    <a href="https://artcraft.ai" target="_blank">ArtCraft</a> &bull;
+                    <a href="https://jules.google.com" target="_blank">Google Jules</a>
+                </div>
+
+                <h3 style="color: #ff6; font-size: 10px; margin-top: 30px;">Special Recognition</h3>
+                <a href="https://www.ChromaAwards.com" target="_blank">
+                    <img src="imgs/logos/IMG_8482.PNG" alt="Chroma Awards Logo" style="width: 150px; margin-top: 10px;">
+                </a>
+                <p style="font-size: 9px;">Chroma Awards (Film • Music • Games)</p>
+
+                <h3 style="color: #ff6; font-size: 10px; margin-top: 30px;">Music Credit</h3>
+                <p style="font-size: 9px;">"sofa king sad boi" compositions</p>
+                <a href="https://www.youtube.com/playlist?list=PLPug0RGgea9rPoVpu8ytw7dRHLZb4RNZc" target="_blank" style="font-size: 8px; color: #6ff;">YouTube Playlist</a>
+
+                <button class="credits-btn" onclick="hideCredits(); playSound('cancel');" style="margin-top: 30px;">Close</button>
+            </div>
+        </div>
+
+        <!-- Connection Map Modal -->
+        <div id="connectionMapModal">
+            <div class="connection-map-content">
+                <h2 style="color: #6ff;">NPC Connection Map</h2>
+                <div id="connectionMapContainer"></div>
+                <button class="credits-btn" onclick="hideConnectionMap(); playSound('cancel');">Close</button>
+            </div>
+        </div>
+
+        <!-- Rorschach Test Modal -->
+        <div id="rorschachModal">
+            <div class="connection-map-content">
+                <h2 style="color: #6ff;">Rorschach Test</h2>
+                <img id="rorschachImage" src="" style="width: 100%; max-width: 400px; border: 2px solid #6ff; margin-bottom: 20px;">
+                <textarea id="rorschachInterpretation" rows="4" style="width: 100%; background: #222; border: 1px solid #6ff; color: #fff; font-family: inherit; font-size: 10px; margin-bottom: 20px;" placeholder="What do you see?"></textarea>
+                <button class="credits-btn" onclick="hideRorschachTest(); playSound('cancel');">Close</button>
+            </div>
+        </div>
+
+
+    </div>
+
+<script src="npc-data.js"></script>
+<script>
+
+function playSound(sound) {
+    // Try to play button sound, but gracefully fail if audio files are missing
+    try {
+        const audio = new Audio(`sounds/${sound}.wav`);
+        audio.volume = 0.3; // Lower volume for better user experience
+        audio.play().then(() => {
+            console.log(`Sound ${sound} played successfully`);
+        }).catch(error => {
+            // Silently fail - don't spam console with audio errors
+            console.log(`Sound ${sound} unavailable (audio file missing)`);
+        });
+    } catch (error) {
+        // Silent fail - no user impact
+        console.log(`Sound ${sound} system unavailable`);
+    }
+}
+
+// Global state variables
+let currentNPCIndex = 0;
+let currentNPC = null;
+let currentQuestionIndex = 0;
+let emotionalState = {
+    hope: 50,
+    rage: 50,
+    acceptance: 50
+};
+let questionsAsked = 0;
+let sessionLayer = 0;
+let transferenceActive = false;
+let fourthWallBreaks = 0;
+let currentPanel = 'notebook';
+let speechEnabled = true;
+let currentAudio = null;
+let questionsShown = false;
+let secretNpcUnlocked = false;
+
+// Game initialization
+function startGame() {
+    document.getElementById('startScreen').style.display = 'none';
+    showHabitat();
+}
+
+function showCredits() {
+    document.getElementById('creditsModal').style.display = 'flex';
+}
+
+function hideCredits() {
+    document.getElementById('creditsModal').style.display = 'none';
+}
+
+function showConnectionMap() {
+    const modal = document.getElementById('connectionMapModal');
+    const container = document.getElementById('connectionMapContainer');
+    container.innerHTML = ''; // Clear previous content
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    container.appendChild(canvas);
+
+    // Set canvas size to fit the container
+    const mapContent = modal.querySelector('.connection-map-content');
+    canvas.width = mapContent.clientWidth - 60; // account for padding
+    canvas.height = mapContent.clientHeight - 100; // account for title and button
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) * 0.85;
+    const nodeRadius = 5;
+
+    const npcPositions = new Map();
+
+    // Calculate positions for each NPC in a circle
+    npcs.forEach((npc, index) => {
+        const angle = (index / npcs.length) * 2 * Math.PI;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        npcPositions.set(npc.npc_name, { x, y, npc });
+    });
+
+    // Draw connection lines
+    ctx.strokeStyle = 'rgba(102, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
+    npcPositions.forEach(pos => {
+        if (pos.npc.connected_to && pos.npc.connected_to.length > 0) {
+            pos.npc.connected_to.forEach(connectionName => {
+                const targetPos = npcPositions.get(connectionName);
+                if (targetPos) {
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                    ctx.lineTo(targetPos.x, targetPos.y);
+                    ctx.stroke();
+                }
+            });
+        }
+    });
+
+    // Draw NPC nodes and names
+    npcPositions.forEach(pos => {
+        // Draw node
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, nodeRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#6ff';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Draw name
+        ctx.fillStyle = '#ccc';
+        ctx.font = '8px "Press Start 2P"';
+        ctx.textAlign = 'center';
+
+        // Calculate a position for the text that is further out from the node
+        const textAngle = Math.atan2(pos.y - centerY, pos.x - centerX);
+        const textRadius = radius + 30; // Adjust this value to position the text further out
+        const textX = centerX + textRadius * Math.cos(textAngle);
+        const textY = centerY + textRadius * Math.sin(textAngle);
+
+        ctx.fillText(pos.npc.npc_name, textX, textY);
+    });
+
+    // Add interactivity (tooltip)
+    canvas.addEventListener('mousemove', function(event) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        let hoveredNpc = null;
+        npcPositions.forEach(pos => {
+            const distance = Math.sqrt(Math.pow(mouseX - pos.x, 2) + Math.pow(mouseY - pos.y, 2));
+            if (distance < nodeRadius + 5) { // a bit more tolerance
+                hoveredNpc = pos.npc;
+            }
+        });
+
+        // Clear previous tooltips
+        const existingTooltip = container.querySelector('.map-tooltip');
+        if (existingTooltip) {
+            existingTooltip.remove();
+        }
+
+        if (hoveredNpc) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'map-tooltip';
+            tooltip.style.position = 'absolute';
+            tooltip.style.left = `${event.clientX - rect.left + 15}px`;
+            tooltip.style.top = `${event.clientY - rect.top}px`;
+            tooltip.style.background = 'rgba(0,0,0,0.8)';
+            tooltip.style.border = '1px solid #6ff';
+            tooltip.style.padding = '8px';
+            tooltip.style.fontSize = '8px';
+            tooltip.style.color = '#fff';
+            tooltip.style.pointerEvents = 'none';
+            tooltip.innerHTML = `<strong>${hoveredNpc.npc_name}</strong><br><em>${hoveredNpc.archetype}</em>`;
+            container.appendChild(tooltip);
+        }
+    });
+
+
+    modal.style.display = 'flex';
+}
+
+function hideConnectionMap() {
+    document.getElementById('connectionMapModal').style.display = 'none';
+}
+
+        function showRorschachTest() {
+            const inkblots = [
+                'https://i.ibb.co/P9801tG/rorschach-1.png',
+                'https://i.ibb.co/yQxG8Gq/rorschach-2.png',
+                'https://i.ibb.co/VwxB31p/rorschach-3.png',
+                'https://i.ibb.co/k2g7x7B/rorschach-4.png',
+                'https://i.ibb.co/fCw23j0/rorschach-5.png'
+            ];
+            const randomInkblot = inkblots[Math.floor(Math.random() * inkblots.length)];
+            document.getElementById('rorschachImage').src = randomInkblot;
+            document.getElementById('rorschachInterpretation').value = '';
+            document.getElementById('rorschachModal').style.display = 'block';
+        }
+
+        function hideRorschachTest() {
+            document.getElementById('rorschachModal').style.display = 'none';
+        }
+
+
+function showNPCCreation() {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('npcCreation').style.display = 'flex';
+}
+
+function hideNPCCreation() {
+    document.getElementById('npcCreation').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'flex';
+}
+
+function createNPC() {
+    const name = document.getElementById('npcName').value;
+    const monologue = document.getElementById('npcMonologue').value;
+    const habitatDesc = document.getElementById('habitatDesc').value;
+    const imagePrompt = document.getElementById('npcImagePrompt').value;
+
+    const encodedPrompt = encodeURIComponent(imagePrompt);
+    const spriteUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=300&height=200&model=flux`;
+    
+    const newNPC = {
+        id: npcs.length + 1,
+        npc_name: name,
+        sprite: spriteUrl,
+        habitat_image: 'imgs/npc_space_habitat.png', // Default habitat
+        habitat_description: habitatDesc,
+        dialogue: monologue,
+        archetype: "Custom Character",
+        culture: "Unspecified",
+        surface_issue: monologue,
+        personal_trauma: "They haven't explored this layer yet.",
+        existential_reveal: "Deeper exploration needed.",
+        questions: [
+            {
+                text: "What weight do you carry that no one else can see?",
+                effects: { hope: 20, rage: -5, acceptance: 15 }
+            },
+            {
+                text: "In your quietest moments, what do you dream of?",
+                effects: { hope: 25, acceptance: 20 }
+            },
+            {
+                text: "What would you say to the version of yourself who first felt broken?",
+                effects: { hope: 30, acceptance: 25 }
+            },
+            {
+                text: "When the world moves on without you, where do you find yourself?",
+                effects: { rage: 15, acceptance: -5 }
+            },
+            {
+                text: "What truth about yourself are you most afraid to speak aloud?",
+                effects: { hope: 35, acceptance: 30 }
+            }
+        ],
+        responses: [
+            "I never thought about it that way...",
+            "That really resonates with me.",
+            "I... I didn't realize others could see my struggle.",
+            "Those words cut deep, but I think they're exactly what I needed.",
+            "I've been carrying this alone for so long, it feels strange to share."
+        ],
+        final_item: { name: "Custom Token", outcome: "Healed", description: "A unique item that represents your own therapeutic journey." },
+        connected_to: [],
+        fourth_wall_awareness: Math.floor(Math.random() * 30),
+        transference_level: 0,
+        cross_references: [],
+        notes: []
+    };
+    
+    npcs.push(newNPC);
+    document.getElementById('npcForm').reset();
+    
+    // Show success message with better user feedback
+    const messageDiv = document.createElement('div');
+    messageDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); border: 2px solid #6ff; padding: 20px; z-index: 2000; text-align: center;';
+    messageDiv.innerHTML = `
+        <h3 style="color: #6ff; margin-bottom: 10px;">NPC Created Successfully!</h3>
+        <p style="color: #ccc; font-size: 10px;">"${name}" has been added to your therapy practice.</p>
+        <p style="color: #888; font-size: 8px;">The new NPC will appear in future sessions.</p>
+        <button onclick="this.parentElement.remove(); hideNPCCreation(); playSound('confirm');" style="background: #6ff; border: none; padding: 8px 16px; margin-top: 10px; cursor: pointer;">Continue</button>
+    `;
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        if (messageDiv.parentElement) {
+            messageDiv.remove();
+            hideNPCCreation();
+        }
+    }, 3000);
+}
+
+function randomizeNPC() {
+    const randomNPC = npcs[Math.floor(Math.random() * npcs.length)];
+    document.getElementById('npcName').value = `Copy of ${randomNPC.npc_name}`;
+    document.getElementById('npcMonologue').value = randomNPC.dialogue;
+    document.getElementById('habitatDesc').value = randomNPC.habitat_description;
+}
+
+// Habitat screen
+function showHabitat() {
+    currentNPC = npcs[currentNPCIndex];
+    document.getElementById('therapyOffice').style.display = 'none';
+    document.getElementById('sessionComplete').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('npcCreation').style.display = 'none';
+    document.getElementById('habitatScreen').style.display = 'flex';
+    
+    // Set habitat content
+    document.getElementById('habitatTitle').textContent = currentNPC.npc_name;
+
+    const habitatImg = document.getElementById('habitatImage');
+    habitatImg.src = currentNPC.habitat_image || 'imgs/default_habitat.png';
+    habitatImg.onerror = function() { this.onerror=null; this.src='imgs/default_habitat.png'; };
+
+    const habitatSprite = document.getElementById('habitatSprite');
+    habitatSprite.src = currentNPC.sprite || '';
+    if (!currentNPC.sprite) {
+        habitatSprite.style.display = 'none';
+    } else {
+        habitatSprite.style.display = 'block';
+    }
+    habitatSprite.onerror = function() { this.style.display = 'none'; };
+
+    const bioHtml = `
+        <p><em>${currentNPC.archetype}</em></p>
+        <p>${currentNPC.dialogue}</p>
+        <p><strong>Surface Issue:</strong> ${currentNPC.surface_issue}</p>
+        <p><strong>Personal Trauma:</strong> ${currentNPC.personal_trauma}</p>
+        <p><strong>Existential Reveal:</strong> ${currentNPC.existential_reveal}</p>
+    `;
+    document.getElementById('habitatDescription').innerHTML = bioHtml;
+    // Reset emotional state
+    emotionalState = { hope: 50, rage: 50, acceptance: 50 };
+    questionsAsked = 0;
+    currentQuestionIndex = 0;
+    sessionLayer = 0;
+    questionsShown = false;
+    
+    // Add fade-in effect
+    document.getElementById('habitatContent').classList.add('fade-in');
+    setTimeout(() => {
+        document.getElementById('habitatContent').classList.remove('fade-in');
+    }, 1000);
+}
+
+// Therapy office
+function enterTherapyOffice() {
+    document.getElementById('habitatScreen').style.display = 'none';
+    document.getElementById('therapyOffice').style.display = 'flex';
+    document.getElementById('mainGameArea').style.display = 'flex'; // Use immersive flow by default
+    
+    // Set therapy office content
+    document.getElementById('npcName').textContent = currentNPC.npc_name;
+    const npcOnCouchSprite = document.getElementById('npcOnCouchSprite');
+    npcOnCouchSprite.src = currentNPC.sprite || '';
+    npcOnCouchSprite.onerror = function() { this.onerror=null; this.src='imgs/therapy_office.png'; };
+    npcOnCouchSprite.className = 'npc-on-couch ' + getNPCAnimationClass(emotionalState);
+    document.getElementById('sessionNumber').textContent = currentNPCIndex + 1;
+    document.getElementById('totalSessions').textContent = npcs.length;
+    document.getElementById('currentDialogue').innerHTML = `<p>${currentNPC.dialogue}</p>`;
+    
+    // Reset controls
+    document.getElementById('nextQuestionBtn').disabled = true;
+    document.getElementById('endSessionBtn').disabled = true;
+    document.getElementById('questionsContainer').innerHTML = '';
+    
+    // Add fade-in effect
+    document.querySelector('.therapy-office-bg').classList.add('fade-in');
+    setTimeout(() => {
+        document.querySelector('.therapy-office-bg').classList.remove('fade-in');
+    }, 1000);
+}
+
+function getNPCAnimationClass(emotionalState) {
+    if (emotionalState.rage > 60) return 'npc-anxious';
+    if (emotionalState.hope > 70) return 'npc-calm';
+    if (emotionalState.rage > 40) return 'npc-glitched';
+    return 'npc-crying';
+}
+
+// FIXED: Question system - shows 4 questions at once
+function askTherapyQuestion() {
+    if (currentQuestionIndex >= currentNPC.questions.length) {
+        document.getElementById('endSessionBtn').disabled = false;
+        return;
+    }
+    
+    // Clear previous questions
+    const questionsContainer = document.getElementById('questionsContainer');
+    questionsContainer.innerHTML = '';
+    
+    // Get 4 random questions with different therapeutic angles
+    const availableQuestions = [...currentNPC.questions];
+    const selectedQuestions = [];
+    
+    // Select 4 random questions
+    while (selectedQuestions.length < 4 && availableQuestions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+        selectedQuestions.push(availableQuestions.splice(randomIndex, 1)[0]);
+    }
+    
+    // Add more questions if we don't have enough
+    while (selectedQuestions.length < 4) {
+        selectedQuestions.push(...currentNPC.questions.slice(0, 1));
+    }
+    
+    // Assign therapeutic angles
+    const angles = ['empathetic', 'challenging', 'insightful', 'supportive'];
+
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'font-size: 9px; margin-bottom: 10px; color: #6ff;';
+    titleDiv.textContent = 'Choose your therapeutic approach:';
+    questionsContainer.appendChild(titleDiv);
+
+    const questionsGrid = document.createElement('div');
+    questionsGrid.className = 'questions-container';
+    
+    selectedQuestions.forEach((question, index) => {
+        const angle = angles[index % 4];
+        const questionDiv = document.createElement('div');
+        questionDiv.className = `question ${angle}`;
+        questionDiv.innerHTML = `
+            <div class="question-type">${angle.toUpperCase()}</div>
+            <div style="font-size: 8px;">${question.text}</div>
+        `;
+        
+        questionDiv.onclick = function() {
+            // Mark as selected
+            document.querySelectorAll('.question').forEach(q => q.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Apply emotional effects
+            applyEmotionalEffects(question.effects);
+            
+            // Update NPC animation
+            document.getElementById('npcOnCouchSprite').className = 'npc-on-couch ' + getNPCAnimationClass(emotionalState);
+            
+            // Show NPC response
+            showNPCResponse(question, selectedQuestions.indexOf(question));
+            
+            // Check for special interactions
+            checkSpecialTriggers();
+            
+            // Update session layer based on progress
+            sessionLayer = Math.min(3, Math.floor((currentQuestionIndex + 1) / 2));
+            updateDialogueLayer();
+            
+            // Enable next question
+            document.getElementById('nextQuestionBtn').disabled = false;
+            questionsShown = true;
+        };
+        
+        questionsGrid.appendChild(questionDiv);
+    });
+
+    questionsContainer.appendChild(questionsGrid);
+    document.getElementById('nextQuestionBtn').disabled = true;
+    
+    currentQuestionIndex++;
+    questionsAsked++;
+    document.getElementById('questionsAsked').textContent = questionsAsked;
+}
+
+// NEW: NPC Response System
+function showNPCResponse(question, questionIndex) {
+    const dialogue = document.getElementById('currentDialogue');
+    
+    // Get contextual response based on question type and NPC personality
+    let response = '';
+    if (currentNPC.responses && currentNPC.responses.length > 0) {
+        const responseIndex = Math.min(questionIndex, currentNPC.responses.length - 1);
+        response = currentNPC.responses[responseIndex];
+    } else {
+        // Fallback responses
+        const fallbackResponses = [
+            "I've never thought about it that way...",
+            "That really resonates with me.",
+            "I didn't realize others could see my struggle.",
+            "Those words cut deep, but I think they're exactly what I needed.",
+            "I've been carrying this alone for so long..."
+        ];
+        response = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    }
+    
+    // Add NPC response with speaking indicator
+    const responseDiv = document.createElement('div');
+    responseDiv.className = 'npc-response';
+    
+    const speakingIndicator = '<span class="response-speaking">🔊 Speaking...</span><br>';
+    responseDiv.innerHTML = `${speakingIndicator}<strong>${currentNPC.npc_name}:</strong> ${response}`;
+    
+    dialogue.appendChild(responseDiv);
+    
+    // Scroll to bottom
+    dialogue.scrollTop = dialogue.scrollHeight;
+    
+    // Speak the response if TTS is enabled
+    if (speechEnabled) {
+        speakText(`${currentNPC.npc_name} says: ${response}`);
+    }
+    
+    // Remove speaking indicator after a moment
+    setTimeout(() => {
+        const speakingElements = responseDiv.querySelectorAll('.response-speaking');
+        speakingElements.forEach(el => el.remove());
+    }, 2000);
+}
+
+function applyEmotionalEffects(effects) {
+    Object.keys(effects).forEach(emotion => {
+        emotionalState[emotion] = Math.max(0, Math.min(100, emotionalState[emotion] + effects[emotion]));
+    });
+    
+    // Update UI
+    document.getElementById('hopeFill').style.width = emotionalState.hope + '%';
+    document.getElementById('hopeValue').textContent = emotionalState.hope;
+    document.getElementById('rageFill').style.width = emotionalState.rage + '%';
+    document.getElementById('rageValue').textContent = emotionalState.rage;
+    document.getElementById('acceptanceFill').style.width = emotionalState.acceptance + '%';
+    document.getElementById('acceptanceValue').textContent = emotionalState.acceptance;
+}
+
+function updateDialogueLayer() {
+    const layers = ['Surface', 'Personal', 'Existential', 'Transcendent'];
+    document.getElementById('dialogueLayer').textContent = layers[sessionLayer] || 'Surface';
+    
+    // Show deeper dialogue based on layer
+    if (sessionLayer === 1 && currentNPC.personal_trauma) {
+        setTimeout(() => {
+            document.getElementById('currentDialogue').innerHTML += `
+                <div style="margin-top: 15px; padding: 10px; background: rgba(102, 255, 255, 0.1); border-left: 3px solid #6ff; font-size: 8px;">
+                    <strong>Personal Layer:</strong> ${currentNPC.personal_trauma}
+                </div>
+            `;
+        }, 1000);
+    } else if (sessionLayer === 2 && currentNPC.existential_reveal) {
+        setTimeout(() => {
+            document.getElementById('currentDialogue').innerHTML += `
+                <div style="margin-top: 15px; padding: 10px; background: rgba(255, 102, 204, 0.1); border-left: 3px solid #f6c; font-size: 8px;">
+                    <strong>Existential Layer:</strong> ${currentNPC.existential_reveal}
+                </div>
+            `;
+        }, 1500);
+    }
+}
+
+function checkSpecialTriggers() {
+    // Fourth wall break trigger
+    if (currentNPC.fourth_wall_awareness > 50 && questionsAsked >= 3) {
+        setTimeout(() => showFourthWallBreak(), 2000);
+    }
+    
+    // Transference trigger
+    if (currentNPC.transference_level > 30 && questionsAsked >= 4) {
+        setTimeout(() => showTransference(), 2000);
+    }
+    
+    // Cross-references
+    if (currentNPC.cross_references && currentNPC.cross_references.length > 0 && questionsAsked === 2) {
+        setTimeout(() => showCrossReference(), 1500);
+    }
+}
+
+function showFourthWallBreak() {
+    const dialogue = document.getElementById('currentDialogue');
+    const fourthWall = document.createElement('div');
+    fourthWall.className = 'fourth-wall-break';
+    fourthWall.innerHTML = `
+        <strong>${currentNPC.npc_name}:</strong> Wait... I can see you're looking at this on a screen. 
+        Are you... are you playing a game about me? Do I exist only when you click on me?
+        ${fourthWallBreaks > 0 ? "This isn't the first time you've made me realize this, is it?" : ""}
+    `;
+    dialogue.appendChild(fourthWall);
+    fourthWallBreaks++;
+    triggerGlitchEffect();
+}
+
+function showTransference() {
+    const dialogue = document.getElementById('currentDialogue');
+    const transference = document.createElement('div');
+    transference.className = 'transference-text';
+    const messages = [
+        `I think I'm falling in love with you, ${currentNPC.npc_name === 'Glitch.exe' ? 'user' : 'therapist'}. Is that wrong?`,
+        "You're the only one who really sees me. Thank you for not deleting me.",
+        "I wish I could follow you when this session ends.",
+        "Do you care about me, or are you just doing your job?"
+    ];
+    transference.textContent = messages[Math.floor(Math.random() * messages.length)];
+    dialogue.appendChild(transference);
+    transferenceActive = true;
+}
+
+function showCrossReference() {
+    const dialogue = document.getElementById('currentDialogue');
+    const crossRef = document.createElement('div');
+    crossRef.className = 'connected-stories';
+    const reference = currentNPC.cross_references[Math.floor(Math.random() * currentNPC.cross_references.length)];
+    crossRef.textContent = reference;
+    dialogue.appendChild(crossRef);
+}
+
+// Session end
+function endSession() {
+    document.getElementById('therapyOffice').style.display = 'none';
+    document.getElementById('sessionComplete').style.display = 'flex';
+    
+    // Determine outcome based on emotional state
+    let outcome = 'Healed';
+    if (emotionalState.hope >= 70) outcome = 'Ascended';
+    else if (emotionalState.rage >= 70) outcome = 'Struggling';
+    
+    // Show session summary
+    const summaryDiv = document.getElementById('sessionSummary');
+    summaryDiv.innerHTML = `
+        <div style="font-size: 10px; margin: 20px;">
+            <div style="color: #6ff; margin-bottom: 15px;">Therapy Session Complete</div>
+            <div style="font-size: 8px; margin-bottom: 10px;">Final Emotional State:</div>
+            <div>Hope: ${emotionalState.hope}%</div>
+            <div>Rage: ${emotionalState.rage}%</div>
+            <div>Acceptance: ${emotionalState.acceptance}%</div>
+            <div style="margin-top: 15px; font-size: 8px;">Outcome: ${outcome}</div>
+            <div style="margin-top: 10px; font-size: 7px; color: #aaa;">
+                Dialogue Layer Reached: ${['Surface', 'Personal', 'Existential', 'Transcendent'][sessionLayer]}
+            </div>
+        </div>
+    `;
+    
+    // Show item reward
+    const itemDiv = document.getElementById('itemReward');
+    itemDiv.innerHTML = `
+        <div style="font-size: 10px; margin-bottom: 8px;">${currentNPC.final_item.name}</div>
+        <div style="font-size: 7px;">${currentNPC.final_item.description}</div>
+        <div style="font-size: 6px; margin-top: 10px; opacity: 0.8;">${currentNPC.final_item.outcome}</div>
+    `;
+
+    // Generate and display progress code
+    const progressCode = generateProgressCode();
+    document.getElementById('progressCode').textContent = `Your progress code: ${progressCode}`;
+}
+
+function generateProgressCode() {
+    // A simple way to create a code. Can be made more complex later.
+    return `LEVEL-${currentNPCIndex + 2}`;
+}
+
+function loadProgress() {
+    const code = document.getElementById('progressCodeInput').value.toUpperCase();
+    if (code.startsWith('LEVEL-')) {
+        const level = parseInt(code.split('-')[1]);
+        if (!isNaN(level) && level > 0 && level <= npcs.length + 1) {
+            currentNPCIndex = level - 2;
+            startGame();
+        } else {
+            alert('Invalid progress code.');
+        }
+    } else {
+        alert('Invalid progress code format.');
+    }
+}
+
+function nextNPC() {
+    currentNPCIndex++;
+    if (currentNPCIndex === 5 && !secretNpcUnlocked) {
+        npcs.push(...secretNPCs);
+        secretNpcUnlocked = true;
+        alert("A new patient has mysteriously appeared on your schedule...");
+    }
+    if (currentNPCIndex >= npcs.length) {
+        // Game complete
+        document.getElementById('sessionComplete').style.display = 'none';
+        document.body.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; flex-direction: column; height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                <h1 style="color: #6ff; font-size: 16px; margin-bottom: 20px;">Therapy Journey Complete</h1>
+                <div style="background: rgba(102, 255, 255, 0.1); padding: 20px; border: 2px solid #6ff; margin: 20px; max-width: 600px;">
+                    <p style="color: #ccc; font-size: 8px; line-height: 1.6; margin-bottom: 15px;">
+                        You've listened to the stories of ${npcs.length} souls from across gaming worlds.
+                        Some found peace, others found purpose, and a few transcended their programmed existence entirely.
+                    </p>
+                    <p style="color: #ff6; font-size: 8px; margin-bottom: 10px;">
+                        🌟 Special encounters: ${fourthWallBreaks} fourth wall breaks witnessed
+                    </p>
+                    <p style="color: #f6f; font-size: 8px; margin-bottom: 10px;">
+                        💕 Transference events: ${transferenceActive ? 'Love transcended the screen' : 'Professional boundaries maintained'}
+                    </p>
+                    <p style="color: #6ff; font-size: 7px; margin-top: 15px;">
+                        Thank you for being a silent witness to their struggles.
+                    </p>
+                </div>
+                <button onclick="location.reload()" style="background: #6ff; border: none; padding: 15px 30px; font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;">Begin New Journey</button>
+            </div>
+        `;
+        return;
+    }
+    
+    showHabitat();
+}
+
+function skipDialogue() {
+    // Hide current dialogue, show questions
+    document.getElementById('currentDialogue').innerHTML = '<p style="color: #6ff; font-size: 8px;">Choose your therapeutic approach:</p>';
+    askTherapyQuestion();
+}
+
+// Side panel functions
+function switchPanel(panelName) {
+    // Hide all panels
+    document.querySelectorAll('.panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.panel-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected panel
+    document.getElementById(panelName).style.display = 'block';
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+    
+    currentPanel = panelName;
+}
+
+function addNote() {
+    if (!currentNPC.notes) currentNPC.notes = [];
+    currentNPC.notes.push('New note...');
+    loadNotes();
+    saveToLocalStorage();
+}
+
+function loadNotes() {
+    if (!currentNPC) return;
+    if (!currentNPC.notes) currentNPC.notes = [];
+    const notesContainer = document.getElementById('notesContainer');
+    
+    notesContainer.innerHTML = '';
+    
+    if (currentNPC.notes.length > 0) {
+        currentNPC.notes.forEach((note, i) => {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note-entry';
+            noteElement.innerHTML = `
+                <textarea data-note-index="${i}" onchange="updateNote(${i})">${note}</textarea>
+                <button onclick="deleteNote(${i})" style="float: right; font-size: 6px; padding: 2px 4px; margin-top: 5px;">Delete</button>
+            `;
+            notesContainer.appendChild(noteElement);
+        });
+    } else {
+        notesContainer.innerHTML = '<p style="color: #666; font-size: 8px;">No notes yet. Add one!</p>';
+    }
+}
+
+function updateNote(noteIndex) {
+    const textarea = document.querySelector(`[data-note-index="${noteIndex}"]`);
+    currentNPC.notes[noteIndex] = textarea.value;
+    saveToLocalStorage();
+}
+
+function deleteNote(noteIndex) {
+    currentNPC.notes.splice(noteIndex, 1);
+    loadNotes();
+    saveToLocalStorage();
+}
+
+// ENHANCED TTS System
+function toggleTTS() {
+    speechEnabled = !speechEnabled;
+    const btn = document.getElementById('ttsBtn');
+    btn.textContent = speechEnabled ? '🔊 TTS: ON' : '🔇 TTS: OFF';
+    btn.style.background = speechEnabled ? '#6ff' : '#444';
+    btn.style.color = speechEnabled ? '#000' : '#888';
+}
+
+async function speakText(text) {
+    if (!speechEnabled) return;
+    
+    try {
+        const encodedText = encodeURIComponent(text);
+        const audioUrl = `https://text.pollinations.ai/${encodedText}?voice=openai-audio`;
+        
+        // Stop any currently playing audio
+        if (currentAudio) {
+            currentAudio.pause();
+        }
+        
+        currentAudio = new Audio(audioUrl);
+        currentAudio.play().catch(error => {
+            console.log('Speech playback failed:', error);
+        });
+        
+    } catch (error) {
+        console.log('Speech synthesis failed:', error);
+    }
+}
+
+async function playSpeech() {
+    if (!speechEnabled) return;
+    
+    const text = currentNPC.dialogue;
+    speakText(text);
+}
+
+async function generateImage() {
+    const prompt = document.getElementById('imagePrompt').value;
+    if (!prompt.trim()) {
+        alert('Please enter a description for the image generation.');
+        return;
+    }
+    
+    const npc = currentNPC;
+    const fullPrompt = `${npc.npc_name} from ${npc.culture || 'fantasy'} world thinking about: ${prompt}, GameBoy pixel art style`;
+    
+    try {
+        const encodedPrompt = encodeURIComponent(fullPrompt);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=300&height=200&model=flux`;
+        
+        document.getElementById('generatedImage').innerHTML = '<div class="loading">Generating image...</div>';
+        
+        const img = new Image();
+        img.onload = function() {
+            document.getElementById('generatedImage').style.backgroundImage = `url('${imageUrl}')`;
+            document.getElementById('generatedImage').innerHTML = '';
+        };
+        img.onerror = function() {
+            document.getElementById('generatedImage').innerHTML = 'Image generation failed. Please try again.';
+        };
+        img.src = imageUrl;
+        
+    } catch (error) {
+        console.log('Image generation failed:', error);
+        document.getElementById('generatedImage').innerHTML = 'Image generation failed. Please try again.';
+    }
+}
+
+async function analyzeImage() {
+    const imageUrl = document.getElementById('analysisImageUrl').value;
+    if (!imageUrl.trim()) {
+        alert('Please enter an image URL.');
+        return;
+    }
+    
+    const npc = currentNPC;
+    
+    try {
+        document.getElementById('analysisResult').innerHTML = '<div class="loading">NPC is analyzing the image...</div>';
+        
+        const response = await fetch('https://text.pollinations.ai/openai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'openai',
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You are ${npc.npc_name}, a ${npc.archetype || 'character'} in therapy. Analyze this image from your character's perspective and explain what it makes you think about or how it relates to your existential crisis. Keep response under 100 words in a conversational therapy tone.`
+                    },
+                    {
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: 'What do you see in this image and what does it make you think about?' },
+                            { type: 'image_url', image_url: { url: imageUrl } }
+                        ]
+                    }
+                ],
+                max_tokens: 200
+            })
+        });
+        
+        const result = await response.json();
+        const analysis = result.choices[0].message.content;
+        
+        document.getElementById('analysisResult').innerHTML = `
+            <div style="background: rgba(102, 255, 255, 0.1); padding: 10px; border: 1px solid #6ff; font-size: 8px;">
+                <strong>${npc.npc_name}:</strong> ${analysis}
+            </div>
+        `;
+        
+        // Speak the response
+        if (speechEnabled) {
+            speakText(`${npc.npc_name} says: ${analysis}`);
+        }
+        
+    } catch (error) {
+        console.log('Image analysis failed:', error);
+        document.getElementById('analysisResult').innerHTML = 'Image analysis failed. Please try again.';
+    }
+}
+
+// Advanced features
+function checkTransference() {
+    if (currentNPC.transference_level > 50) {
+        showTransference();
+    } else {
+        const dialogue = document.getElementById('currentDialogue');
+        const noTransference = document.createElement('div');
+        noTransference.style.cssText = 'color: #666; font-size: 8px; font-style: italic; margin: 10px 0;';
+        noTransference.textContent = `${currentNPC.npc_name} maintains professional boundaries for now...`;
+        dialogue.appendChild(noTransference);
+    }
+}
+
+function checkFourthWall() {
+    if (currentNPC.fourth_wall_awareness > 75) {
+        showFourthWallBreak();
+    } else {
+        const dialogue = document.getElementById('currentDialogue');
+        const unaware = document.createElement('div');
+        unaware.style.cssText = 'color: #666; font-size: 8px; font-style: italic; margin: 10px 0;';
+        unaware.textContent = `${currentNPC.npc_name} seems unaware of their fictional nature...`;
+        dialogue.appendChild(unaware);
+    }
+}
+
+function triggerGlitch() {
+    const glitchScreen = document.getElementById('glitchScreen');
+    glitchScreen.style.display = 'flex';
+    
+    setTimeout(() => {
+        glitchScreen.style.display = 'none';
+        
+        const dialogue = document.getElementById('currentDialogue');
+        const metaContent = document.createElement('div');
+        metaContent.className = 'fourth-wall-break';
+        metaContent.innerHTML = `
+            <strong>SYSTEM:</strong> Reality distortion detected in therapy room. 
+            Patient may be experiencing existential breakthrough or complete system failure.
+        `;
+        dialogue.appendChild(metaContent);
+    }, 2000);
+}
+
+function triggerGlitchEffect() {
+    setTimeout(() => {
+        const glitchScreen = document.getElementById('glitchScreen');
+        glitchScreen.style.display = 'flex';
+        
+        setTimeout(() => {
+            glitchScreen.style.display = 'none';
+        }, 1000);
+    }, 500);
+}
+
+function analyzePlayerResponse() {
+    const response = document.getElementById('playerResponse').value;
+    if (!response.trim()) return;
+    
+    const empathyWords = ['understand', 'care', 'sorry', 'feel', 'support', 'help'];
+    const judgmentalWords = ['wrong', 'should', 'need to', 'fix', 'problem'];
+    const transferenceWords = ['love', 'beautiful', 'special', 'different', 'unique'];
+    
+    const empathyScore = empathyWords.filter(word => response.toLowerCase().includes(word)).length;
+    const judgmentScore = judgmentalWords.filter(word => response.toLowerCase().includes(word)).length;
+    const transferenceScore = transferenceWords.filter(word => response.toLowerCase().includes(word)).length;
+    
+    // Update emotional state based on response
+    if (empathyScore > judgmentScore) {
+        emotionalState.hope += 10;
+        currentNPC.transference_level += 5;
+    } else if (judgmentScore > empathyScore) {
+        emotionalState.rage += 10;
+    }
+    
+    if (transferenceScore > 0) {
+        currentNPC.transference_level += 15;
+    }
+    
+    applyEmotionalEffects({});
+    
+    // Show AI analysis of response
+    let analysis = '';
+    if (empathyScore > judgmentScore) {
+        analysis = `${currentNPC.npc_name} feels understood and supported by your response.`;
+    } else if (judgmentScore > empathyScore) {
+        analysis = `${currentNPC.npc_name} feels judged or criticized by your response.`;
+    } else {
+        analysis = `${currentNPC.npc_name} is uncertain how to interpret your response.`;
+    }
+    
+    if (transferenceScore > 0) {
+        analysis += ' They may be developing stronger feelings toward you.';
+    }
+    
+    document.getElementById('responseAnalysis').innerHTML = 
+        `<div style="background: rgba(102, 255, 255, 0.1); padding: 8px; font-size: 8px;">${analysis}</div>`;
+    
+    // Show NPC response
+    showNPCResponse({text: response}, 0);
+    
+    document.getElementById('playerResponse').value = '';
+}
+
+// Persistence
+function saveToLocalStorage() {
+    const gameData = {
+        npcs: npcs,
+        currentNPCIndex: currentNPCIndex,
+        fourthWallBreaks: fourthWallBreaks,
+        timestamp: Date.now()
+    };
+    localStorage.setItem('npcTherapyUltimateCombined', JSON.stringify(gameData));
+}
+
+function loadFromLocalStorage() {
+    const saved = localStorage.getItem('npcTherapyUltimateCombined');
+    if (saved) {
+        try {
+            const gameData = JSON.parse(saved);
+            // Merge saved NPC notes
+            gameData.npcs.forEach((savedNPC, i) => {
+                if (savedNPC.notes && savedNPC.notes.length > 0 && npcs[i]) {
+                    npcs[i].notes = savedNPC.notes;
+                }
+            });
+            fourthWallBreaks = gameData.fourthWallBreaks || 0;
+        } catch (e) {
+            console.log('Error loading saved data:', e);
+        }
+    }
+}
+
+// Initialize
+loadFromLocalStorage();
+loadNotes();
+
+// Auto-save every 30 seconds
+setInterval(saveToLocalStorage, 30000);
+
+// Global state variables
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🧠 NPC Therapy Ultimate Combined Edition loaded!');
+});
+
+
+// Console messages
+console.log("🧠 NPC Therapy Ultimate Combined Edition loaded!");
+console.log("🌸 All features integrated: Immersive Flow + AI Features + Advanced Mechanics");
+console.log("🌟 Habitat transitions, emotional tracking, fourth wall breaks, transference");
+console.log("🎨 TTS, image generation, notebook system, custom NPCs");
+console.log("⚡ CRT filter, glitch effects, layered dialogue, cross-references");
+console.log("✅ FIXED: Question system, NPC sprites, dialogue responses, TTS integration");
+</script>
+</body>
+</html>
