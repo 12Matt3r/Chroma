@@ -597,9 +597,9 @@
 
         .tts-controls {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 20;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
         }
 
         /* Music Player Styles */
@@ -776,6 +776,7 @@
             <div id="mainGameArea" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;">
                 <div id="leftPanel">
                     <div class="therapy-office-bg">
+                        <img id="npcOnCouchSprite" class="npc-on-couch" src="" alt="NPC on couch" style="display: none;" onerror="this.style.display='none'">
                         <div class="therapy-ui-top">
                             <div class="tts-controls">
                                 <button class="control-btn" onclick="toggleTTS()" id="ttsBtn">🔊 TTS: ON</button>
@@ -803,7 +804,6 @@
                         </div>
 
                         <div class="therapy-main">
-                            <img class="npc-on-couch" id="npcOnCouchSprite" alt="NPC on couch">
                             <div class="dialogue-box">
                                 <div class="npc-name" id="npcName"></div>
                                 <div id="currentDialogue"></div>
@@ -930,8 +930,64 @@
 
     </div>
 
+    <!-- Music Player -->
+    <div id="musicPlayer">
+        <button id="minimizePlayer" onclick="togglePlayerSize()">-</button>
+        <div id="playerControls">
+            <span style="font-size: 8px; color: #6ff;">Music</span>
+            <button id="playBtn" onclick="playVideo()">▶</button>
+            <button id="pauseBtn" onclick="pauseVideo()">❚❚</button>
+        </div>
+        <div id="youtubePlayer"></div>
+    </div>
+
 <script src="npc-data.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
+
+// Music Player
+let player;
+let playerReady = false;
+
+function onYouTubeIframeAPIReady() {
+    // Using a placeholder video ID since the original playlist is not accessible.
+    // Replace 'jfKfPfyJRdk' with the desired YouTube video ID.
+    const videoId = 'jfKfPfyJRdk';
+    player = new YT.Player('youtubePlayer', {
+        height: '100',
+        width: '200',
+        videoId: videoId,
+        playerVars: {
+            'playsinline': 1,
+            'autoplay': 0,
+            'controls': 0,
+            'loop': 1,
+            'playlist': videoId
+        },
+        events: {
+            'onReady': onPlayerReady,
+        }
+    });
+}
+
+function onPlayerReady(event) {
+    playerReady = true;
+    event.target.setVolume(50);
+}
+
+function playVideo() {
+    if (playerReady) player.playVideo();
+}
+
+function pauseVideo() {
+    if (playerReady) player.pauseVideo();
+}
+
+function togglePlayerSize() {
+    const musicPlayer = document.getElementById('musicPlayer');
+    musicPlayer.classList.toggle('minimized');
+}
+
 
 function playSound(sound) {
     // Try to play button sound, but gracefully fail if audio files are missing
@@ -988,14 +1044,22 @@ function showConnectionMap() {
     const container = document.getElementById('connectionMapContainer');
     container.innerHTML = ''; // Clear previous content
 
+    if (!window.npcs || window.npcs.length === 0) {
+        container.innerHTML = '<p style="color: #ff6;">Loading NPC data...</p>';
+        // Assuming npcs are loaded from npc-data.js, which is included in the HTML.
+        // If it were loaded asynchronously, we would need a different approach.
+        setTimeout(showConnectionMap, 500); // Retry after a short delay
+        modal.style.display = 'flex';
+        return;
+    }
+
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     container.appendChild(canvas);
 
-    // Set canvas size to fit the container
     const mapContent = modal.querySelector('.connection-map-content');
-    canvas.width = mapContent.clientWidth - 60; // account for padding
-    canvas.height = mapContent.clientHeight - 100; // account for title and button
+    canvas.width = mapContent.clientWidth - 60;
+    canvas.height = mapContent.clientHeight - 100;
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
@@ -1004,7 +1068,6 @@ function showConnectionMap() {
 
     const npcPositions = new Map();
 
-    // Calculate positions for each NPC in a circle
     npcs.forEach((npc, index) => {
         const angle = (index / npcs.length) * 2 * Math.PI;
         const x = centerX + radius * Math.cos(angle);
@@ -1012,11 +1075,10 @@ function showConnectionMap() {
         npcPositions.set(npc.npc_name, { x, y, npc });
     });
 
-    // Draw connection lines
     ctx.strokeStyle = 'rgba(102, 255, 255, 0.3)';
     ctx.lineWidth = 1;
     npcPositions.forEach(pos => {
-        if (pos.npc.connected_to && pos.npc.connected_to.length > 0) {
+        if (pos.npc.connected_to && Array.isArray(pos.npc.connected_to) && pos.npc.connected_to.length > 0) {
             pos.npc.connected_to.forEach(connectionName => {
                 const targetPos = npcPositions.get(connectionName);
                 if (targetPos) {
@@ -1029,9 +1091,7 @@ function showConnectionMap() {
         }
     });
 
-    // Draw NPC nodes and names
     npcPositions.forEach(pos => {
-        // Draw node
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, nodeRadius, 0, 2 * Math.PI);
         ctx.fillStyle = '#6ff';
@@ -1040,35 +1100,31 @@ function showConnectionMap() {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Draw name
         ctx.fillStyle = '#ccc';
         ctx.font = '8px "Press Start 2P"';
         ctx.textAlign = 'center';
 
-        // Calculate a position for the text that is further out from the node
         const textAngle = Math.atan2(pos.y - centerY, pos.x - centerX);
-        const textRadius = radius + 30; // Adjust this value to position the text further out
+        const textRadius = radius + 20;
         const textX = centerX + textRadius * Math.cos(textAngle);
         const textY = centerY + textRadius * Math.sin(textAngle);
 
         ctx.fillText(pos.npc.npc_name, textX, textY);
     });
 
-    // Add interactivity (tooltip)
     canvas.addEventListener('mousemove', function(event) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
-
         let hoveredNpc = null;
+
         npcPositions.forEach(pos => {
             const distance = Math.sqrt(Math.pow(mouseX - pos.x, 2) + Math.pow(mouseY - pos.y, 2));
-            if (distance < nodeRadius + 5) { // a bit more tolerance
+            if (distance < nodeRadius + 5) {
                 hoveredNpc = pos.npc;
             }
         });
 
-        // Clear previous tooltips
         const existingTooltip = container.querySelector('.map-tooltip');
         if (existingTooltip) {
             existingTooltip.remove();
@@ -1077,20 +1133,21 @@ function showConnectionMap() {
         if (hoveredNpc) {
             const tooltip = document.createElement('div');
             tooltip.className = 'map-tooltip';
-            tooltip.style.position = 'absolute';
-            tooltip.style.left = `${event.clientX - rect.left + 15}px`;
-            tooltip.style.top = `${event.clientY - rect.top}px`;
-            tooltip.style.background = 'rgba(0,0,0,0.8)';
-            tooltip.style.border = '1px solid #6ff';
-            tooltip.style.padding = '8px';
-            tooltip.style.fontSize = '8px';
-            tooltip.style.color = '#fff';
-            tooltip.style.pointerEvents = 'none';
-            tooltip.innerHTML = `<strong>${hoveredNpc.npc_name}</strong><br><em>${hoveredNpc.archetype}</em>`;
+            Object.assign(tooltip.style, {
+                position: 'absolute',
+                left: `${event.clientX - rect.left + 15}px`,
+                top: `${event.clientY - rect.top}px`,
+                background: 'rgba(0,0,0,0.8)',
+                border: '1px solid #6ff',
+                padding: '8px',
+                fontSize: '8px',
+                color: '#fff',
+                pointerEvents: 'none'
+            });
+            tooltip.innerHTML = `<strong>${hoveredNpc.npc_name}</strong><br><em>${hoveredNpc.archetype || 'N/A'}</em>`;
             container.appendChild(tooltip);
         }
     });
-
 
     modal.style.display = 'flex';
 }
@@ -1247,7 +1304,7 @@ function showHabitat() {
         <p><strong>Personal Trauma:</strong> ${currentNPC.personal_trauma}</p>
         <p><strong>Existential Reveal:</strong> ${currentNPC.existential_reveal}</p>
     `;
-    document.getElementById('habitatDescription').innerHTML = bioHtml;
+    document.getElementById('habitatDescription').innerHTML = currentNPC.habitat_description || bioHtml;
     // Reset emotional state
     emotionalState = { hope: 50, rage: 50, acceptance: 50 };
     questionsAsked = 0;
@@ -1266,14 +1323,21 @@ function showHabitat() {
 function enterTherapyOffice() {
     document.getElementById('habitatScreen').style.display = 'none';
     document.getElementById('therapyOffice').style.display = 'flex';
-    document.getElementById('mainGameArea').style.display = 'flex'; // Use immersive flow by default
-    
+    document.getElementById('mainGameArea').style.display = 'flex';
+
     // Set therapy office content
+    const therapyBg = document.querySelector('.therapy-office-bg');
+    therapyBg.style.backgroundImage = "url('imgs/therapy_office.png')"; // Set default background
+
+    const npcSprite = document.getElementById('npcOnCouchSprite');
+    if (currentNPC.sprite) {
+        npcSprite.src = currentNPC.sprite;
+        npcSprite.style.display = 'block';
+    } else {
+        npcSprite.style.display = 'none';
+    }
+
     document.getElementById('npcName').textContent = currentNPC.npc_name;
-    const npcOnCouchSprite = document.getElementById('npcOnCouchSprite');
-    npcOnCouchSprite.src = currentNPC.sprite || '';
-    npcOnCouchSprite.onerror = function() { this.onerror=null; this.src='imgs/therapy_office.png'; };
-    npcOnCouchSprite.className = 'npc-on-couch ' + getNPCAnimationClass(emotionalState);
     document.getElementById('sessionNumber').textContent = currentNPCIndex + 1;
     document.getElementById('totalSessions').textContent = npcs.length;
     document.getElementById('currentDialogue').innerHTML = `<p>${currentNPC.dialogue}</p>`;
@@ -1284,9 +1348,9 @@ function enterTherapyOffice() {
     document.getElementById('questionsContainer').innerHTML = '';
     
     // Add fade-in effect
-    document.querySelector('.therapy-office-bg').classList.add('fade-in');
+    therapyBg.classList.add('fade-in');
     setTimeout(() => {
-        document.querySelector('.therapy-office-bg').classList.remove('fade-in');
+        therapyBg.classList.remove('fade-in');
     }, 1000);
 }
 
@@ -1686,30 +1750,54 @@ function deleteNote(noteIndex) {
 function toggleTTS() {
     speechEnabled = !speechEnabled;
     const btn = document.getElementById('ttsBtn');
-    btn.textContent = speechEnabled ? '🔊 TTS: ON' : '🔇 TTS: OFF';
-    btn.style.background = speechEnabled ? '#6ff' : '#444';
-    btn.style.color = speechEnabled ? '#000' : '#888';
+    if (speechEnabled) {
+        btn.textContent = '🔊 TTS: ON';
+        btn.style.background = '#6ff';
+        btn.style.color = '#000';
+    } else {
+        btn.textContent = '🔇 TTS: OFF';
+        btn.style.background = '#444';
+        btn.style.color = '#888';
+        if (currentAudio) {
+            currentAudio.pause(); // Stop any playing audio when turning TTS off
+        }
+    }
 }
 
 async function speakText(text) {
     if (!speechEnabled) return;
-    
+
+    const ttsBtn = document.getElementById('ttsBtn');
+    ttsBtn.disabled = true;
+    ttsBtn.textContent = '...'; // Speaking indicator
+
     try {
         const encodedText = encodeURIComponent(text);
         const audioUrl = `https://text.pollinations.ai/${encodedText}?voice=openai-audio`;
-        
-        // Stop any currently playing audio
+
         if (currentAudio) {
             currentAudio.pause();
         }
-        
+
         currentAudio = new Audio(audioUrl);
-        currentAudio.play().catch(error => {
-            console.log('Speech playback failed:', error);
-        });
         
+        currentAudio.onended = () => {
+            ttsBtn.disabled = false;
+            ttsBtn.textContent = '🔊 TTS: ON';
+        };
+
+        currentAudio.onerror = () => {
+            console.log('Speech playback error. Service might be unavailable.');
+            ttsBtn.disabled = false;
+            ttsBtn.textContent = '🔊 TTS: ON';
+        };
+
+        await currentAudio.play();
+
     } catch (error) {
-        console.log('Speech synthesis failed:', error);
+        console.log('Speech synthesis request failed:', error);
+        ttsBtn.disabled = false;
+        ttsBtn.textContent = '🔊 TTS: ON';
     }
 }
 
@@ -1726,30 +1814,11 @@ async function generateImage() {
         alert('Please enter a description for the image generation.');
         return;
     }
-    
-    const npc = currentNPC;
-    const fullPrompt = `${npc.npc_name} from ${npc.culture || 'fantasy'} world thinking about: ${prompt}, GameBoy pixel art style`;
-    
-    try {
-        const encodedPrompt = encodeURIComponent(fullPrompt);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=300&height=200&model=flux`;
-        
-        document.getElementById('generatedImage').innerHTML = '<div class="loading">Generating image...</div>';
-        
-        const img = new Image();
-        img.onload = function() {
-            document.getElementById('generatedImage').style.backgroundImage = `url('${imageUrl}')`;
-            document.getElementById('generatedImage').innerHTML = '';
-        };
-        img.onerror = function() {
-            document.getElementById('generatedImage').innerHTML = 'Image generation failed. Please try again.';
-        };
-        img.src = imageUrl;
-        
-    } catch (error) {
-        console.log('Image generation failed:', error);
-        document.getElementById('generatedImage').innerHTML = 'Image generation failed. Please try again.';
-    }
+
+    // Display the prompt as a placeholder
+    const generatedImage = document.getElementById('generatedImage');
+    generatedImage.style.backgroundImage = '';
+    generatedImage.innerHTML = `<div style="padding: 10px; font-size: 8px; color: #ccc;">${prompt}</div>`;
 }
 
 async function analyzeImage() {
