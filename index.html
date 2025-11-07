@@ -6,6 +6,7 @@
     <title>NPC Therapy - Ultimate Combined Edition</title>
     <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/dexie@latest/dist/dexie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -695,6 +696,54 @@
             justify-content: center;
             z-index: 1004;
         }
+
+        /* Draggable Window Styles */
+        .draggable-window {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 600px;
+            height: 400px;
+            background: #111;
+            border: 2px solid #6ff;
+            display: none;
+            z-index: 2000;
+            flex-direction: column;
+            resize: both;
+            overflow: hidden;
+        }
+
+        .window-header {
+            background: #6ff;
+            color: #000;
+            padding: 5px;
+            cursor: move;
+            font-size: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .window-controls button {
+            background: none;
+            border: none;
+            color: #000;
+            font-family: 'Press Start 2P';
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .window-content {
+            flex-grow: 1;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .window-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -834,7 +883,7 @@
                         <button class="panel-btn" onclick="switchPanel('freeInput'); playSound('switch');">💬 Free Input</button>
                         <button class="panel-btn" onclick="showConnectionMap(); playSound('click');">🗺️ Connection Map</button>
                         <button class="panel-btn" onclick="showRorschachTest(); playSound('click');">🎨 Rorschach Test</button>
-
+                        <button class="panel-btn" onclick="showPathToSelf(); playSound('click');">🌌 Path to Self</button>
                     </div>
 
                     <div id="notebook" class="panel">
@@ -930,6 +979,21 @@
 
     </div>
 
+    <!-- Path to Self Game Window -->
+    <div id="pathToSelfWindow" class="draggable-window">
+        <div class="window-header">
+            <span>Path to Self</span>
+            <div class="window-controls">
+                <button onclick="minimizeWindow('pathToSelfWindow')">_</button>
+                <button onclick="maximizeWindow('pathToSelfWindow')">[]</button>
+                <button onclick="closeWindow('pathToSelfWindow')">X</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <iframe src="https://uxwq0l0o2qi9.space.minimax.io/"></iframe>
+        </div>
+    </div>
+
     <!-- Music Player -->
     <div id="musicPlayer">
         <button id="minimizePlayer" onclick="togglePlayerSize()">-</button>
@@ -950,19 +1014,16 @@ let player;
 let playerReady = false;
 
 function onYouTubeIframeAPIReady() {
-    // Using a placeholder video ID since the original playlist is not accessible.
-    // Replace 'jfKfPfyJRdk' with the desired YouTube video ID.
-    const videoId = 'jfKfPfyJRdk';
     player = new YT.Player('youtubePlayer', {
         height: '100',
         width: '200',
-        videoId: videoId,
         playerVars: {
+            'listType': 'playlist',
+            'list': 'PLPug0RGgea9rPoVpu8ytw7dRHLZb4RNZc',
             'playsinline': 1,
             'autoplay': 0,
             'controls': 0,
-            'loop': 1,
-            'playlist': videoId
+            'loop': 1
         },
         events: {
             'onReady': onPlayerReady,
@@ -1024,11 +1085,99 @@ let speechEnabled = true;
 let currentAudio = null;
 let questionsShown = false;
 let secretNpcUnlocked = false;
+let sessionTime = 0;
+let sessionTimer = null;
+let awards = {
+    chroma: false,
+    podcast: false
+};
 
 // Game initialization
 function startGame() {
     document.getElementById('startScreen').style.display = 'none';
+    startSessionTimer();
     showHabitat();
+}
+
+function startSessionTimer() {
+    if (sessionTimer) clearInterval(sessionTimer);
+    sessionTimer = setInterval(() => {
+        sessionTime++;
+        checkAwards();
+    }, 1000);
+}
+
+function checkAwards() {
+    // 15 seconds for testing
+    if (sessionTime >= 15 && !awards.chroma) {
+        awards.chroma = true;
+        unlockSecretCharacters();
+        showChromaAward();
+    }
+
+    // 30 seconds for testing
+    if (sessionTime >= 30 && !awards.podcast) {
+        awards.podcast = true;
+        showPodcastEasterEgg();
+    }
+}
+
+function unlockSecretCharacters() {
+    if (!secretNpcUnlocked) {
+        npcs.push(...secretNPCs);
+        secretNpcUnlocked = true;
+        // Optional: Notify the player
+        setTimeout(() => {
+            alert("A new patient has mysteriously appeared on your schedule...");
+        }, 2000);
+    }
+}
+
+function showChromaAward() {
+    const awardModal = document.createElement('div');
+    awardModal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.95);
+        border: 2px solid #6ff;
+        padding: 30px;
+        z-index: 3000;
+        text-align: center;
+        animation: fadeIn 1s;
+    `;
+    awardModal.innerHTML = `
+        <h2 style="color: #6ff; margin-bottom: 20px;">Chroma Award Unlocked!</h2>
+        <img src="imgs/logos/IMG_8482.PNG" alt="Chroma Award" style="width: 150px; margin-bottom: 20px;">
+        <p style="color: #ccc; font-size: 10px;">Thank you for your participation!</p>
+        <p style="color: #aaa; font-size: 8px; margin-top: 10px;">New NPCs are now available.</p>
+        <button onclick="this.parentElement.remove(); playSound('confirm');" style="background: #6ff; border: none; padding: 10px 20px; margin-top: 20px; cursor: pointer; font-family: 'Press Start 2P';">Continue</button>
+    `;
+    document.body.appendChild(awardModal);
+}
+
+function showPodcastEasterEgg() {
+    const podcastModal = document.createElement('div');
+    podcastModal.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(20,20,40,0.9);
+        border: 1px solid #ff6;
+        padding: 15px;
+        z-index: 3000;
+        text-align: left;
+        animation: fadeIn 1s;
+        font-size: 9px;
+    `;
+    podcastModal.innerHTML = `
+        <h3 style="color: #ff6; margin-bottom: 10px; font-size: 10px;">Secret Found!</h3>
+        <p style="color: #ccc;">You've uncovered a hidden message.</p>
+        <a href="https://placeholder.com/podcast" target="_blank" style="color: #6ff; display: block; margin-top: 10px;">Listen to the Creator's Podcast</a>
+        <button onclick="this.parentElement.remove();" style="background: none; border: none; color: #ff6; position: absolute; top: 5px; right: 5px; cursor: pointer;">X</button>
+    `;
+    document.body.appendChild(podcastModal);
 }
 
 function showCredits() {
@@ -1312,6 +1461,8 @@ function showHabitat() {
     sessionLayer = 0;
     questionsShown = false;
     
+    loadNotes();
+
     // Add fade-in effect
     document.getElementById('habitatContent').classList.add('fade-in');
     setTimeout(() => {
@@ -1631,7 +1782,7 @@ function loadProgress() {
     if (code.startsWith('LEVEL-')) {
         const level = parseInt(code.split('-')[1]);
         if (!isNaN(level) && level > 0 && level <= npcs.length + 1) {
-            currentNPCIndex = level - 2;
+            currentNPCIndex = level - 1;
             startGame();
         } else {
             alert('Invalid progress code.');
@@ -1706,7 +1857,13 @@ function switchPanel(panelName) {
 }
 
 function addNote() {
-    if (!currentNPC.notes) currentNPC.notes = [];
+    if (!currentNPC) {
+        console.error("Cannot add note: currentNPC is not initialized.");
+        return;
+    }
+    if (!currentNPC.notes) {
+        currentNPC.notes = [];
+    }
     currentNPC.notes.push('New note...');
     loadNotes();
     saveToLocalStorage();
@@ -1996,15 +2153,23 @@ function loadFromLocalStorage() {
     if (saved) {
         try {
             const gameData = JSON.parse(saved);
-            // Merge saved NPC notes
+            // Merge saved NPC notes, ensuring data integrity
             gameData.npcs.forEach((savedNPC, i) => {
-                if (savedNPC.notes && savedNPC.notes.length > 0 && npcs[i]) {
-                    npcs[i].notes = savedNPC.notes;
+                if (npcs[i]) {
+                    // Check if notes exist and are a valid array, otherwise initialize
+                    if (savedNPC.notes && Array.isArray(savedNPC.notes)) {
+                        npcs[i].notes = savedNPC.notes;
+                    } else {
+                        if (savedNPC.notes) {
+                             console.warn(`Data corruption detected for NPC ${i}: notes is not an array. Resetting.`);
+                        }
+                        npcs[i].notes = [];
+                    }
                 }
             });
             fourthWallBreaks = gameData.fourthWallBreaks || 0;
         } catch (e) {
-            console.log('Error loading saved data:', e);
+            console.error('Error loading or parsing saved data:', e);
         }
     }
 }
@@ -2019,6 +2184,7 @@ setInterval(saveToLocalStorage, 30000);
 // Global state variables
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🧠 NPC Therapy Ultimate Combined Edition loaded!');
+    console.log('npcs array on DOMContentLoaded:', window.npcs);
 });
 
 
@@ -2029,6 +2195,77 @@ console.log("🌟 Habitat transitions, emotional tracking, fourth wall breaks, t
 console.log("🎨 TTS, image generation, notebook system, custom NPCs");
 console.log("⚡ CRT filter, glitch effects, layered dialogue, cross-references");
 console.log("✅ FIXED: Question system, NPC sprites, dialogue responses, TTS integration");
+
+// Path to Self Window
+function showPathToSelf() {
+    document.getElementById('pathToSelfWindow').style.display = 'flex';
+}
+
+function closeWindow(windowId) {
+    document.getElementById(windowId).style.display = 'none';
+}
+
+function minimizeWindow(windowId) {
+    const windowEl = document.getElementById(windowId);
+    windowEl.style.height = '30px';
+    windowEl.querySelector('.window-content').style.display = 'none';
+}
+
+function maximizeWindow(windowId) {
+    const windowEl = document.getElementById(windowId);
+    windowEl.style.height = '80vh';
+    windowEl.style.width = '80vw';
+    windowEl.style.top = '10vh';
+    windowEl.style.left = '10vw';
+    windowEl.querySelector('.window-content').style.display = 'block';
+}
+
+// Draggable and Resizable Window
+interact('.draggable-window')
+    .draggable({
+        inertia: true,
+        modifiers: [
+            interact.modifiers.restrictRect({
+                restriction: 'parent',
+                endOnly: true
+            })
+        ],
+        autoScroll: true,
+        listeners: {
+            move: dragMoveListener
+        }
+    })
+    .resizable({
+        edges: { left: true, right: true, bottom: true, top: true },
+        listeners: {
+            move: function (event) {
+                let { x, y } = event.target.dataset;
+
+                x = (parseFloat(x) || 0) + event.deltaRect.left;
+                y = (parseFloat(y) || 0) + event.deltaRect.top;
+
+                Object.assign(event.target.style, {
+                    width: `${event.rect.width}px`,
+                    height: `${event.rect.height}px`,
+                    transform: `translate(${x}px, ${y}px)`
+                });
+
+                Object.assign(event.target.dataset, { x, y });
+            }
+        },
+        inertia: true
+    })
+
+function dragMoveListener(event) {
+    const target = event.target;
+    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+    target.style.transform = `translate(${x}px, ${y}px)`;
+
+    target.setAttribute('data-x', x);
+    target.setAttribute('data-y', y);
+}
 </script>
 </body>
 </html>
