@@ -1,4 +1,4 @@
-const npcs = [
+window.npcs = [
   {
     "id": 1,
     "npc_name": "Mira the Tired Healer",
@@ -51,7 +51,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 5,
     "cross_references": null,
-    "notes": "Successful Path: Question 2, Response 1/8, Question 3, Response 6."
+    "notes": ["Successful Path: Question 2, Response 1/8, Question 3, Response 6."]
   },
   {
     "id": 2,
@@ -104,7 +104,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": null,
-    "notes": "Successful Path: Question 1, Response 1, Question 3, Response 8, Response 10."
+    "notes": ["Successful Path: Question 1, Response 1, Question 3, Response 8, Response 10."]
   },
   {
     "id": 3,
@@ -156,7 +156,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 5,
     "cross_references": null,
-    "notes": "Successful Path: Question 1, Response 1, Question 2, Response 2/5."
+    "notes": ["Successful Path: Question 1, Response 1, Question 2, Response 2/5."]
   },
   {
     "id": 4,
@@ -204,7 +204,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 10,
     "cross_references": null,
-    "notes": "Successful Path: Question 1, Response 1, Question 3, Response 8/5."
+    "notes": ["Successful Path: Question 1, Response 1, Question 3, Response 8/5."]
   },
   {
     "id": 5,
@@ -257,7 +257,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 5,
     "cross_references": null,
-    "notes": "Successful Path: Question 1, Response 1, Question 2, Response 3/4/5."
+    "notes": ["Successful Path: Question 1, Response 1, Question 2, Response 3/4/5."]
   },
   {
     "id": 6,
@@ -305,7 +305,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function / Grief): Tiko is trapped in a classic 'enabler' paradox.",
-    "notes": "Successful Path: Question 3, Response 2, Question 1, Response 6/3."
+    "notes": ["Successful Path: Question 3, Response 2, Question 1, Response 6/3."]
   },
   {
     "id": 7,
@@ -358,7 +358,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Trauma of Function): Luna-9 is a tragic case of purpose-built obsolescence.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 2, Question 1 (text in Qs[0]), Response 8/10."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 2, Question 1 (text in Qs[0]), Response 8/10."]
   },
   {
     "id": 8,
@@ -411,7 +411,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Prison of the Loop / Assigned Role): Worm suffers from an imposed identity.",
-    "notes": "Successful Path: Question 2 (text in Qs[0]), Response 1/2, Question 5 (text in Qs[1]), Response 4/5."
+    "notes": ["Successful Path: Question 2 (text in Qs[0]), Response 1/2, Question 5 (text in Qs[1]), Response 4/5."]
   },
   {
     "id": 9,
@@ -460,7 +460,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Prison of the Loop / Trauma of Function): Bishop-47 is a strategic genius with no meaningful war to fight.",
-    "notes": "Successful Path: Question 2 (text in Qs[1]), Response 2/7, Question 1 (text in Qs[0]), Response 6/10."
+    "notes": ["Successful Path: Question 2 (text in Qs[1]), Response 2/7, Question 1 (text in Qs[0]), Response 6/10."]
   },
   {
     "id": 10,
@@ -508,7 +508,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Trauma of Function): Pebble is the classic 'Support Role' trauma.",
-    "notes": "Successful Path: Question 4 (text in Qs[0]), Response 7, Question 5 (text in Qs[1]), Response 1/10."
+    "notes": ["Successful Path: Question 4 (text in Qs[0]), Response 7, Question 5 (text in Qs[1]), Response 1/10."]
   },
   {
     "id": 11,
@@ -561,7 +561,7 @@ const npcs = [
     "fourth_wall_awareness": 15,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): Glitch.exe suffers from a traumatic loss of stability.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 1/3, Question 3 (text in Qs[0]), Response 10."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 1/3, Question 3 (text in Qs[0]), Response 10."]
   },
   {
     "id": 12,
@@ -614,7 +614,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function): A classic case. Gerald is a 'Tired Quest Giver'.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 8, Question 3 (text in Qs[1]), Response 9/5."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 8, Question 3 (text in Qs[1]), Response 9/5."]
   },
   {
     "id": 13,
@@ -661,7 +661,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Prison of the Loop): Captain Steel's trauma is the obliteration of consequence.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 6, Question 4 (text in Qs[1]), Response 7/1."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 6, Question 4 (text in Qs[1]), Response 7/1."]
   },
   {
     "id": 14,
@@ -714,7 +714,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function): Luna's identity as an artist has been consumed by her profession as a streamer.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 6, Question 3 (text in Qs[1]), Response 9/1."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 6, Question 3 (text in Qs[1]), Response 9/1."]
   },
   {
     "id": 15,
@@ -762,7 +762,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Burden of the Past / Grief): Jake is a tragic case of post-narrative irrelevance.",
-    "notes": "Successful Path: Question 2 (text in Qs[0]), Response 7, Question 4 (text in Qs[1]), Response 9/1."
+    "notes": ["Successful Path: Question 2 (text in Qs[0]), Response 7, Question 4 (text in Qs[1]), Response 9/1."]
   },
   {
     "id": 16,
@@ -814,7 +814,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Burden of the Past / Grief): This is a profound case of body-identity disconnect.",
-    "notes": "Successful Path: Question 2 (text in Qs[0]), Response 3/7, Question 4 (text in Qs[1]), Response 8/10."
+    "notes": ["Successful Path: Question 2 (text in Qs[0]), Response 3/7, Question 4 (text in Qs[1]), Response 8/10."]
   },
   {
     "id": 17,
@@ -862,7 +862,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function): Zara is the living embodiment of capitalism as identity.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 7/10."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 7/10."]
   },
   {
     "id": 18,
@@ -910,7 +910,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): This is a profound case of existential rejection.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 1, Question 2 (text in Qs[0]), Response 7/10."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 1, Question 2 (text in Qs[0]), Response 7/10."]
   },
   {
     "id": 19,
@@ -962,7 +962,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function / Moral Injury): This vendor is suffering from profound moral complicity.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 7/10."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 7/10."]
   },
   {
     "id": 20,
@@ -1010,7 +1010,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Burden of the Past / Grief): Sarah is a human (a player) trapped in a loop of ritualized, unresolved grief.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 9/10."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 9/10."]
   },
   {
     "id": 21,
@@ -1062,7 +1062,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Trauma of Function): This is a profound identity conflict.",
-    "notes": "Successful Path: Question 2 (text in Qs[1]), Response 6, Question 1 (text in Qs[0]), Response 5/10."
+    "notes": ["Successful Path: Question 2 (text in Qs[1]), Response 6, Question 1 (text in Qs[0]), Response 5/10."]
   },
   {
     "id": 22,
@@ -1109,7 +1109,7 @@ const npcs = [
     "fourth_wall_awareness": 15,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Prison of the Loop): This is an advanced case of existential futility, far beyond Byte (ID 2).",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 4, Question 1 (text in Qs[0]), Response 6."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 4, Question 1 (text in Qs[0]), Response 6."]
   },
   {
     "id": 23,
@@ -1160,7 +1160,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma / Grief): ARIA-7 is grieving a self she never fully was.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 3, Question 2 (text in Qs[0]), Response 7/4."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 3, Question 2 (text in Qs[0]), Response 7/4."]
   },
   {
     "id": 24,
@@ -1213,7 +1213,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Prison of the Loop): Specter is trapped in a loop of hollow victory.",
-    "notes": "Successful Path: Question 2 (text in Qs[0]), Response 2/7, Question 3 (text in Qs[1]), Response 8/4."
+    "notes": ["Successful Path: Question 2 (text in Qs[0]), Response 2/7, Question 3 (text in Qs[1]), Response 8/4."]
   },
   {
     "id": 25,
@@ -1262,7 +1262,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): This is a profound case of existential rejection.",
-    "notes": "Successful Path: Question 5 (text in Qs[2]), Response 4/1, Question 3 (text in Qs[1]), Response 9."
+    "notes": ["Successful Path: Question 5 (text in Qs[2]), Response 4/1, Question 3 (text in Qs[1]), Response 9."]
   },
   {
     "id": 26,
@@ -1313,7 +1313,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): The Priest is suffering a profound crisis of faith.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 1, Question 1 (text in Qs[0]), Response 6/10."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 1, Question 1 (text in Qs[0]), Response 6/10."]
   },
   {
     "id": 27,
@@ -1361,7 +1361,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Trauma of Function / Codependency): Seraphina is a classic 'caregiver' personality.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 2, Question 2 (text in Qs[0]), Response 7/10."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 2, Question 2 (text in Qs[0]), Response 7/10."]
   },
   {
     "id": 28,
@@ -1409,7 +1409,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Burden of the Past / Obsolescence): The Turret is a 'retired soldier'.",
-    "notes": "Successful Path: Question 2 (text in Qs[0]), Response 7, Question 5 (text in Qs[1]), Response 4/10."
+    "notes": ["Successful Path: Question 2 (text in Qs[0]), Response 7, Question 5 (text in Qs[1]), Response 4/10."]
   },
   {
     "id": 29,
@@ -1457,7 +1457,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): R0GU3 is a liberated entity suffering from the anxiety of absolute freedom.",
-    "notes": "Successful Path: Question 2 (text in Qs[1]), Response 6, Question 1 (text in Qs[0]), Response 2/9/10."
+    "notes": ["Successful Path: Question 2 (text in Qs[1]), Response 6, Question 1 (text in Qs[0]), Response 2/9/10."]
   },
   {
     "id": 30,
@@ -1505,7 +1505,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma / Disempowerment): The Princess is a brilliant, strategic observer.",
-    "notes": "Successful Path: Question 2 (text in Qs[0]), Response 7, Question 4 (text in Qs[1]), Response 8/5."
+    "notes": ["Successful Path: Question 2 (text in Qs[0]), Response 7, Question 4 (text in Qs[1]), Response 8/5."]
   },
   {
     "id": 31,
@@ -1558,7 +1558,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Prison of the Loop): This patient is suffering from victory-induced nihilism.",
-    "notes": "Successful Path: Question 2 (text in Qs[1]), Response 6, Question 3 (text in Qs[2]), Response 7/2."
+    "notes": ["Successful Path: Question 2 (text in Qs[1]), Response 6, Question 3 (text in Qs[2]), Response 7/2."]
   },
   {
     "id": 32,
@@ -1605,7 +1605,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function): Scales is a 'comic relief' character.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 2/3."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 2/3."]
   },
   {
     "id": 33,
@@ -1653,7 +1653,7 @@ const npcs = [
     "fourth_wall_awareness": 0,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Burden of the Past / Irrelevance): Harmonix is an artist whose trauma is the fear of non-existence.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 1, Question 1 (text in Qs[0]), Response 6/5."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 1, Question 1 (text in Qs[0]), Response 6/5."]
   },
   {
     "id": 34,
@@ -1701,7 +1701,7 @@ const npcs = [
     "fourth_wall_awareness": 6,
     "transference_level": 4,
     "cross_references": "Clinical Diagnosis (Temporal Trauma / Existential Recycling): This entity experiences time as circular rather than linear, leading to both comfort and horror.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 1, Question 2 (text in Qs[1]), Response 3/4."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 1, Question 2 (text in Qs[1]), Response 3/4."]
   },
   {
     "id": 35,
@@ -1749,7 +1749,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Burden of the Past / Grief): More acute, specific version of Sarah's (ID 20) trauma.",
-    "notes": "Successful Path: Question 3 (text in Qs[0]), Response 7/8, Question 5 (text in Qs[1]), Response 3/4."
+    "notes": ["Successful Path: Question 3 (text in Qs[0]), Response 7/8, Question 5 (text in Qs[1]), Response 3/4."]
   },
   {
     "id": 36,
@@ -1797,7 +1797,7 @@ const npcs = [
     "fourth_wall_awareness": 8,
     "transference_level": 7,
     "cross_references": "Clinical Diagnosis (Meta-Identity Crisis): The Protagonist is experiencing ontological crisis about their constructed nature and lack of authentic selfhood.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 1, Question 2 (text in Qs[1]), Response 3/4."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 1, Question 2 (text in Qs[1]), Response 3/4."]
   },
   {
     "id": 37,
@@ -1846,7 +1846,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Burden of the Past / Obsolescence): The White Rabbit is suffering from profound emotional obsolescence.",
-    "notes": "Successful Path: Question 5 (text in Qs[1]), Response 3, Question 2 (text in Qs[0]), Response 6/4."
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 3, Question 2 (text in Qs[0]), Response 6/4."]
   },
   {
     "id": 38,
@@ -1894,7 +1894,7 @@ const npcs = [
     "fourth_wall_awareness": 7,
     "transference_level": 8,
     "cross_references": "Clinical Diagnosis (Musical Dependency / Existential Terror): This entity experiences music as ontological necessity rather than aesthetic pleasure.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 1, Question 2 (text in Qs[1]), Response 3/4."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 1, Question 2 (text in Qs[1]), Response 3/4."]
   },
   {
     "id": 39,
@@ -1945,7 +1945,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): This patient is a code error made manifest.",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 7/5."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 6, Question 2 (text in Qs[1]), Response 7/5."]
   },
   {
     "id": 40,
@@ -1997,7 +1997,7 @@ const npcs = [
     "fourth_wall_awareness": 5,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function / Grief): A relationship where the communication breakdown became sentient.",
-    "notes": "Successful Path: Question 2 (text in Qs[0]), Response 7, Question 3 (text in Qs[1]), Response 8/4."
+    "notes": ["Successful Path: Question 2 (text in Qs[0]), Response 7, Question 3 (text in Qs[1]), Response 8/4."]
   },
   {
     "id": 46,
@@ -2050,7 +2050,7 @@ const npcs = [
     "fourth_wall_awareness": 10,
     "transference_level": 5,
     "cross_references": "Clinical Diagnosis (Trauma of Function / Moral Injury): Identical to ID 19, but more acute.",
-    "notes": "Successful Path: Question 3 (text in Qs[1]), Response 8, Question 2 (text in Qs[0]), Response 7/10."
+    "notes": ["Successful Path: Question 3 (text in Qs[1]), Response 8, Question 2 (text in Qs[0]), Response 7/10."]
   },
   {
     "id": 47,
@@ -2099,7 +2099,7 @@ const npcs = [
     "fourth_wall_awareness": 40,
     "transference_level": 10,
     "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): Fex'tara is a high-awareness 'Trapped NPC.'",
-    "notes": "Successful Path: Question 1 (text in Qs[0]), Response 1/6, Question 4 (text in Qs[1]), Response 9/10."
+    "notes": ["Successful Path: Question 1 (text in Qs[0]), Response 1/6, Question 4 (text in Qs[1]), Response 9/10."]
   },
   {
     "id": 48,
@@ -2309,7 +2309,7 @@ const npcs = [
     "fourth_wall_awareness": 50,
     "transference_level": 50,
     "cross_references": "The ultimate failed player.",
-    "notes": "Successful Path: Question 4 (text in Qs[0]), Response 4, Question 5 (text in Qs[1]), Response 2/5/10."
+    "notes": ["Successful Path: Question 4 (text in Qs[0]), Response 4, Question 5 (text in Qs[1]), Response 2/5/10."]
   },
   {
     "id": 100,
@@ -2430,7 +2430,7 @@ const npcs = [
     "fourth_wall_awareness": 25,
     "transference_level": 30,
     "cross_references": "Clinical Diagnosis (Identity Fragmentation): Similar to ARIA-7 (ID 23) but represents voluntary identity evolution rather than forced replacement.",
-    "notes": "Successful Path: Question 1, Response 1, Question 2, Response 4."
+    "notes": ["Successful Path: Question 1, Response 1, Question 2, Response 4."]
   },
   {
     "id": 52,
@@ -2478,6 +2478,109 @@ const npcs = [
     "fourth_wall_awareness": 20,
     "transference_level": 35,
     "cross_references": "Clinical Diagnosis (Status Anxiety): Royalty experiencing existential crisis similar to high-achieving individuals in modern contexts.",
-    "notes": "Successful Path: Question 1, Response 1, Question 2, Response 4."
+    "notes": ["Successful Path: Question 1, Response 1, Question 2, Response 4."]
   }
 ];
+
+const secretNPCs = [
+  {
+    "id": 26,
+    "npc_name": "The Glitched Priest",
+    "sprite": "imgs/therapy_office/Session_26_The_Glitched_Priest_office.png",
+    "habitat_image": "imgs/character_habitats/Session_26_The_Glitched_Priest_habitat.png",
+    "habitat_description": null,
+    "dialogue": "INITIATING PRAYER... Error: Faith.exe not found. The Lord is my shepherd... Loading screen... The light is broken.",
+    "archetype": "The Corrupted Cleric",
+    "culture": "Fantasy RPG/Meta",
+    "surface_issue": "He is in active crisis. His dialogue is a literal mix of prayer and error codes.",
+    "personal_trauma": "His spiritual calling is being undermined by system corruption. Terrified his divinity is just a 'corrupted subroutine.'",
+    "existential_reveal": "What if the glitch IS the message?",
+    "questions": [
+      {
+        "text": "What is the most profound message contained within your binary glitches?",
+        "effects": {
+          "hope": 35,
+          "acceptance": 35
+        }
+      },
+      {
+        "text": "What if the glitch IS the divine and your faith is perfectly intact?",
+        "effects": {
+          "hope": 40,
+          "acceptance": 40
+        }
+      },
+      {
+        "text": "How can we fix your corrupted code?",
+        "effects": {
+          "rage": 10,
+          "acceptance": -10
+        }
+      }
+    ],
+    "responses": [
+      "System receiving new parameters... Thank you for seeing faith where I only see error.",
+      "The most profound message is... 'SAVE.' Save myself first.",
+      "I think my brokenness allows me to minister to the other glitched NPCs with more authenticity..."
+    ],
+    "final_item": {
+      "name": "The Broken Halo",
+      "outcome": "New Faith",
+      "description": "A perfect symbol that 'broken things can still be sacred.'"
+    },
+    "connected_to": [],
+    "fourth_wall_awareness": 10,
+    "transference_level": 5,
+    "cross_references": "Clinical Diagnosis (Meta-Narrative Trauma): The Priest is suffering a profound crisis of faith.",
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 1, Question 1 (text in Qs[0]), Response 6/10."]
+  },
+  {
+    "id": 27,
+    "npc_name": "Seraphina 'Heals-A-Lot' Dawnwhisper",
+    "sprite": "imgs/therapy_office/Session_27_Seraphina_'Heals-A-Lot'_Dawnwhisper:_MMORPG_Healer_office.png",
+    "habitat_image": "imgs/character_habitats/Session_27_Seraphina_'Heals-A-Lot'_Dawnwhisper:_MMORPG_Healer_habitat.png",
+    "habitat_description": null,
+    "dialogue": "Group status check! Everyone topped off? Good. (Healer at zero emotional resources). Don't worry about me, I'm the strong one.",
+    "archetype": "The Caregiver",
+    "culture": "MMORPG",
+    "surface_issue": "She is in 'triage' mode. Her dialogue is a list of her duties.",
+    "personal_trauma": "The profound loneliness of being the 'strong one.' She has built an identity on being invulnerable and reliable.",
+    "existential_reveal": "Maybe being strong isn't about never needing anything...",
+    "questions": [
+      {
+        "text": "What secret fear do you hope the adventurers never notice when they check your health bar?",
+        "effects": {
+          "hope": 35,
+          "acceptance": 35
+        }
+      },
+      {
+        "text": "What if your greatest strength is not in your spells, but in your ability to ask for help?",
+        "effects": {
+          "hope": 40,
+          "acceptance": 40
+        }
+      },
+      {
+        "text": "Can you buff me?",
+        "effects": {
+          "rage": 5,
+          "acceptance": -10
+        }
+      }
+    ],
+    "responses": [
+      "Buff not found: Self-compassion. Thank you for teaching me this new spell.",
+      "Finally, someone who understands that healers need healing too.",
+      "The secret fear is that I will fail the self-check and log off permanently...",
+      "I'm here for you, Doctor... but I need to say a single phrase for myself: 'I am exhausted. I need a break.'"
+    ],
+    "final_item": null,
+    "connected_to": [],
+    "fourth_wall_awareness": 5,
+    "transference_level": 10,
+    "cross_references": "Clinical Diagnosis (Trauma of Function / Codependency): Seraphina is a classic 'caregiver' personality.",
+    "notes": ["Successful Path: Question 5 (text in Qs[1]), Response 2, Question 2 (text in Qs[0]), Response 7/10."]
+  }
+];
+console.log('npc-data.js loaded:', npcs);
