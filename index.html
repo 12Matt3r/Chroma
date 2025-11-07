@@ -84,14 +84,14 @@
 
         /* Habitat Screen Styles */
         .habitat-image {
-            width: 100%;
-            max-width: 500px;
+            width: 500px;
             height: 300px;
             background-size: cover;
             background-position: center;
             border: 4px solid #6ff;
             margin: 20px 0;
             position: relative;
+            overflow: hidden;
         }
 
         .npc-sprite {
@@ -827,9 +827,6 @@
                     <div class="therapy-office-bg">
                         <img id="npcOnCouchSprite" class="npc-on-couch" src="" alt="NPC on couch" style="display: none;" onerror="this.style.display='none'">
                         <div class="therapy-ui-top">
-                            <div class="tts-controls">
-                                <button class="control-btn" onclick="toggleTTS()" id="ttsBtn">🔊 TTS: ON</button>
-                            </div>
                             <div class="session-status">
                                 <div>Session <span id="sessionNumber">1</span> of <span id="totalSessions">10</span></div>
                                 <div>Questions asked: <span id="questionsAsked">0</span>/5</div>
@@ -876,6 +873,7 @@
                         <button class="panel-btn" onclick="switchPanel('imageGen'); playSound('switch');">🎨 Generate Image</button>
                         <button class="panel-btn" onclick="switchPanel('imageAnalysis'); playSound('switch');">🔍 Analyze Image</button>
                         <button class="panel-btn" onclick="playSpeech(); playSound('click');">🔊 Speak</button>
+                        <button class="panel-btn" onclick="toggleTTS()" id="ttsBtn">🔊 TTS: ON</button>
                         <button class="panel-btn" onclick="checkTransference(); playSound('click');">💕 Transference</button>
                         <button class="panel-btn" onclick="checkFourthWall(); playSound('click');">🖥️ Fourth Wall</button>
                         <button class="panel-btn" onclick="triggerGlitch(); playSound('glitch');">⚡ Glitch</button>
@@ -967,12 +965,12 @@
         </div>
 
         <!-- Rorschach Test Modal -->
-        <div id="rorschachModal">
+        <div id="rorschachModal" style="display: none;">
             <div class="connection-map-content">
                 <h2 style="color: #6ff;">Rorschach Test</h2>
                 <img id="rorschachImage" src="" style="width: 100%; max-width: 400px; border: 2px solid #6ff; margin-bottom: 20px;">
                 <textarea id="rorschachInterpretation" rows="4" style="width: 100%; background: #222; border: 1px solid #6ff; color: #fff; font-family: inherit; font-size: 10px; margin-bottom: 20px;" placeholder="What do you see?"></textarea>
-                <button class="credits-btn" onclick="hideRorschachTest(); playSound('cancel');">Close</button>
+                <button class="credits-btn" onclick="hideRorschachTest()">Close</button>
             </div>
         </div>
 
@@ -1051,19 +1049,13 @@ function togglePlayerSize() {
 
 
 function playSound(sound) {
-    // Try to play button sound, but gracefully fail if audio files are missing
+    // Centralized sound player
     try {
-        const audio = new Audio(`sounds/${sound}.wav`);
-        audio.volume = 0.3; // Lower volume for better user experience
-        audio.play().then(() => {
-            console.log(`Sound ${sound} played successfully`);
-        }).catch(error => {
-            // Silently fail - don't spam console with audio errors
-            console.log(`Sound ${sound} unavailable (audio file missing)`);
-        });
-    } catch (error) {
-        // Silent fail - no user impact
-        console.log(`Sound ${sound} system unavailable`);
+        const audio = new Audio(`/sounds/${sound}.wav`);
+        audio.volume = 0.5;
+        audio.play().catch(e => console.log(`Could not play sound: ${sound}`));
+    } catch (e) {
+        console.log(`Sound system error: ${e.message}`);
     }
 }
 
@@ -1108,15 +1100,15 @@ function startSessionTimer() {
 }
 
 function checkAwards() {
-    // 15 seconds for testing
-    if (sessionTime >= 15 && !awards.chroma) {
+    // 15 minutes
+    if (sessionTime >= 15 * 60 && !awards.chroma) {
         awards.chroma = true;
         unlockSecretCharacters();
         showChromaAward();
     }
 
-    // 30 seconds for testing
-    if (sessionTime >= 30 && !awards.podcast) {
+    // 30 minutes
+    if (sessionTime >= 30 * 60 && !awards.podcast) {
         awards.podcast = true;
         showPodcastEasterEgg();
     }
@@ -1306,17 +1298,15 @@ function hideConnectionMap() {
 }
 
         function showRorschachTest() {
-            const inkblots = [
-                'https://i.ibb.co/P9801tG/rorschach-1.png',
-                'https://i.ibb.co/yQxG8Gq/rorschach-2.png',
-                'https://i.ibb.co/VwxB31p/rorschach-3.png',
-                'https://i.ibb.co/k2g7x7B/rorschach-4.png',
-                'https://i.ibb.co/fCw23j0/rorschach-5.png'
-            ];
-            const randomInkblot = inkblots[Math.floor(Math.random() * inkblots.length)];
-            document.getElementById('rorschachImage').src = randomInkblot;
+            const seed = Math.floor(Math.random() * 100000);
+            const encodedPrompt = encodeURIComponent(`rorschach inkblot, symmetrical, black and white, seed:${seed}`);
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
+
+            const rorschachImage = document.getElementById('rorschachImage');
+            rorschachImage.src = imageUrl;
+
             document.getElementById('rorschachInterpretation').value = '';
-            document.getElementById('rorschachModal').style.display = 'block';
+            document.getElementById('rorschachModal').style.display = 'flex';
         }
 
         function hideRorschachTest() {
@@ -1343,10 +1333,13 @@ function createNPC() {
     const encodedPrompt = encodeURIComponent(imagePrompt);
     const spriteUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=300&height=200&model=flux`;
     
+    // Show a placeholder image while the sprite is generating
+    const placeholderSprite = 'imgs/loading.gif'; // Make sure you have a loading GIF or some placeholder
+
     const newNPC = {
         id: npcs.length + 1,
         npc_name: name,
-        sprite: spriteUrl,
+        sprite: placeholderSprite, // Initially set to placeholder
         habitat_image: 'imgs/npc_space_habitat.png', // Default habitat
         habitat_description: habitatDesc,
         dialogue: monologue,
@@ -1394,6 +1387,22 @@ function createNPC() {
     
     npcs.push(newNPC);
     document.getElementById('npcForm').reset();
+
+    // After creation, update the sprite from the placeholder
+    const tempImage = new Image();
+    tempImage.src = spriteUrl;
+    tempImage.onload = () => {
+        console.log(`Sprite for ${name} loaded successfully.`);
+        newNPC.sprite = spriteUrl;
+        // If you have a dynamic way of updating the UI, you can call it here.
+        // For example, if the new NPC is immediately displayed:
+        // updateNPCSpriteInUI(newNPC.id, spriteUrl);
+    };
+    tempImage.onerror = () => {
+        console.error(`Failed to load sprite for ${name} from ${spriteUrl}.`);
+        // Optionally, set a default error image
+        // newNPC.sprite = 'imgs/error.png';
+    };
     
     // Show success message with better user feedback
     const messageDiv = document.createElement('div');
@@ -1932,17 +1941,17 @@ async function speakText(text) {
         const encodedText = encodeURIComponent(text);
         const audioUrl = `https://text.pollinations.ai/${encodedText}?voice=openai-audio`;
 
+        // Use the playSound logic to handle audio playback
         if (currentAudio) {
             currentAudio.pause();
         }
-
         currentAudio = new Audio(audioUrl);
-        
+        currentAudio.volume = 1.0; // TTS should be at full volume
+
         currentAudio.onended = () => {
             ttsBtn.disabled = false;
             ttsBtn.textContent = '🔊 TTS: ON';
         };
-
         currentAudio.onerror = () => {
             console.log('Speech playback error. Service might be unavailable.');
             ttsBtn.disabled = false;
@@ -1965,6 +1974,10 @@ async function playSpeech() {
     speakText(text);
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function generateImage() {
     const prompt = document.getElementById('imagePrompt').value;
     if (!prompt.trim()) {
@@ -1972,10 +1985,46 @@ async function generateImage() {
         return;
     }
 
-    // Display the prompt as a placeholder
     const generatedImage = document.getElementById('generatedImage');
-    generatedImage.style.backgroundImage = '';
-    generatedImage.innerHTML = `<div style="padding: 10px; font-size: 8px; color: #ccc;">${prompt}</div>`;
+    generatedImage.innerHTML = '<div class="loading">Generating image...</div>'; // Loading indicator
+
+    try {
+        const encodedPrompt = encodeURIComponent(prompt);
+        const API_BASE = 'https://image.pollinations.ai/prompt/';
+
+        let imageUrl = null;
+        // Retry logic for fetching the final image URL
+        for (let i = 0; i < 5; i++) { // Try up to 5 times
+            try {
+                const resp = await fetch(API_BASE + encodedPrompt, { method: 'HEAD', redirect: 'follow' });
+                if (resp && resp.url && resp.status < 400) {
+                    imageUrl = resp.url;
+                    break; // Success
+                }
+            } catch (e) {
+                console.warn(`Attempt ${i+1} to fetch image URL failed.`);
+            }
+            await sleep(1000); // Wait 1 second before retrying
+        }
+
+        if (!imageUrl) {
+            throw new Error('Could not retrieve image URL after multiple attempts.');
+        }
+
+        // Preload the image to ensure it's ready before displaying
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = () => {
+            generatedImage.innerHTML = ''; // Clear loading indicator
+            generatedImage.style.backgroundImage = `url(${imageUrl})`;
+        };
+        img.onerror = () => {
+            generatedImage.innerHTML = 'Failed to load image.';
+        };
+    } catch (error) {
+        console.error('Image generation failed:', error);
+        generatedImage.innerHTML = 'Image generation failed.';
+    }
 }
 
 async function analyzeImage() {
